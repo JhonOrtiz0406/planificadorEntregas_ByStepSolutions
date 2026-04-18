@@ -1,0 +1,37 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
+buildCache {
+    local {
+        directory = new File(rootDir, 'build-cache')
+    }
+}
+
+rootProject.name = 'delivery-planner'
+
+// Domain
+include ':model'
+include ':usecase'
+project(':model').projectDir = file('./domain/model')
+project(':usecase').projectDir = file('./domain/usecase')
+
+// Infrastructure - Driven Adapters
+include ':jpa-repository'
+include ':firebase-notification'
+include ':email-sender'
+project(':jpa-repository').projectDir = file('./infrastructure/driven-adapters/jpa-repository')
+project(':firebase-notification').projectDir = file('./infrastructure/driven-adapters/firebase-notification')
+project(':email-sender').projectDir = file('./infrastructure/driven-adapters/email-sender')
+
+// Infrastructure - Entry Points
+include ':api-rest'
+include ':security-config'
+project(':api-rest').projectDir = file('./infrastructure/entry-points/api-rest')
+project(':security-config').projectDir = file('./infrastructure/entry-points/security-config')
+
+// Application
+include ':app-service'
+project(':app-service').projectDir = file('./applications/app-service')

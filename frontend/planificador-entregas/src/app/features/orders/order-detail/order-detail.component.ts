@@ -1,0 +1,167 @@
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDividerModule } from '@angular/material/divider';
+import { OrderService } from '../../../core/services/order.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { Order, ProgressStatus, PaymentStatus } from '../../../core/models/order.model';
+import { ConfirmDeliveredDialogComponent } from './confirm-delivered-dialog.component';
+
+@Component({
+  selector: 'app-order-detail',
+  standalone: true,
+  imports: [
+    CommonModule, RouterLink, ReactiveFormsModule, MatCardModule, MatButtonModule, MatIconModule,
+    MatChipsModule, MatSelectModule, MatFormFieldModule, MatInputModule,
+    MatSnackBarModule, MatProgressSpinnerModule, MatDividerModule, MatDialogModule
+  ],
+  templateUrl: './order-detail.component.html',
+  styleUrl: './order-detail.component.css'
+})
+export class OrderDetailComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private orderService = inject(OrderService);
+  private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
+  private fb = inject(FormBuilder);
+  authService = inject(AuthService);
+
+  order = signal<Order | null>(null);
+  loading = signal(true);
+  updating = signal(false);
+
+  statusForm = this.fb.group({
+    progressStatus: [''],
+    paymentStatus: [''],
+    paymentAmount: [null as number | null]
+  });
+
+  readonly progressOptions: { value: ProgressStatus; label: string }[] = [
+    { value: 'NOT_STARTED', label: 'Sin iniciar' },
+    { value: 'IN_PREPARATION', label: 'En preparación' },
+    { value: 'DELIVERED', label: 'Entregado' }
+  ];
+
+  readonly paymentOptions: { value: PaymentStatus; label: string }[] = [
+    { value: 'UNPAID', label: 'No pagado' },
+    { value: 'PARTIAL', label: 'Abono' },
+    { value: 'PAID', label: 'Pagado' }
+  ];
+
+  ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id')!;
+    this.orderService.getById(id).subscribe({
+      next: (order) => {
+        this.order.set(order);
+        this.statusForm.patchValue({
+          progressStatus: order.progressStatus,
+          paymentStatus: order.paymentStatus,
+          paymentAmount: order.paymentAmount as any
+        });
+        this.loading.set(false);
+        this.watchPaymentStatus();
+      },
+      error: () => {
+        this.snackBar.open('Pedido no encontrado', 'Cerrar', { duration: 3000 });
+        this.router.navigate(['/orders']);
+      }
+    });
+  }
+
+  private watchPaymentStatus(): void {
+    this.statusForm.get('paymentStatus')?.valueChanges.subscribe(val => {
+      if (val === 'PAID') {
+        // Auto-set progress to IN_PREPARATION
+        this.statusForm.get('progressStatus')?.setValue('IN_PREPARATION', { emitEvent: false });
+        // Ask if already delivered
+        const ref = this.dialog.open(ConfirmDeliveredDialogComponent, { width: '400px' });
+        ref.afterClosed().subscribe(delivered => {
+          if (delivered === true) {
+            this.statusForm.get('progressStatus')?.setValue('DELIVERED', { emitEvent: false });
+          }
+          // false or undefined → keep IN_PREPARATION
+        });
+      }
+    });
+  }
+
+  updateStatus(): void {
+    const order = this.order();
+    if (!order || !this.authService.canUpdateStatus()) return;
+    this.updating.set(true);
+    const val = this.statusForm.value;
+    this.orderService.updateStatus(order.id, {
+      progressStatus: val.progressStatus as ProgressStatus,
+      paymentStatus: val.paymentStatus as PaymentStatus,
+      paymentAmount: val.paymentAmount || undefined
+    }).subscribe({
+      next: (updated) => {
+        this.order.set(updated);
+        this.updating.set(false);
+        const ref = this.snackBar.open(
+          '¡Estado actualizado correctamente!',
+          'Ir al Panel',
+          { duration: 3000, panelClass: ['snack-success'] }
+        );
+        ref.onAction().subscribe(() => this.router.navigate(['/dashboard']));
+        setTimeout(() => this.router.navigate(['/dashboard']), 3000);
+      },
+      error: (err) => {
+        this.updating.set(false);
+        const errData = err.error?.data;
+        if (errData && typeof errData === 'object') {
+          const msgs = Object.entries(errData)
+            .map(([field, msg]) => `${this.fieldLabel(field)}: ${msg}`)
+            .join(' | ');
+          this.snackBar.open(msgs, 'Cerrar', { duration: 6000, panelClass: ['snack-error'] });
+        } else {
+          this.snackBar.open(err.error?.message || 'Error al actualizar', 'Cerrar', { duration: 3000 });
+        }
+      }
+    });
+  }
+
+  private fieldLabel(field: string): string {
+    const labels: Record<string, string> = {
+      deliveryDate: 'Fecha de entrega',
+      progressStatus: 'Estado del pedido',
+      paymentStatus: 'Estado de pago',
+      paymentAmount: 'Monto de abono',
+    };
+    return labels[field] ?? field;
+  }
+
+  deleteOrder(): void {
+    if (!confirm('¿Estás seguro de eliminar este pedido?')) return;
+    this.orderService.delete(this.order()!.id).subscribe({
+      next: () => {
+        this.snackBar.open('Pedido eliminado', 'Cerrar', { duration: 2000 });
+        this.router.navigate(['/orders']);
+      }
+    });
+  }
+
+  getProgressLabel(s: string): string {
+    return { 'NOT_STARTED': 'Sin iniciar', 'IN_PREPARATION': 'En preparación', 'DELIVERED': 'Entregado' }[s] || s;
+  }
+
+  getPaymentLabel(s: string): string {
+    return { 'UNPAID': 'No pagado', 'PARTIAL': 'Abono', 'PAID': 'Pagado' }[s] || s;
+  }
+
+  get isPartialPayment(): boolean {
+    return this.statusForm.get('paymentStatus')?.value === 'PARTIAL';
+  }
+}

@@ -1,0 +1,156 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+:root {
+  --primary: #4f46e5;
+  --primary-dark: #3730a3;
+  --primary-light: #818cf8;
+  --accent: #f59e0b;
+  --accent-dark: #d97706;
+  --success: #10b981;
+  --warning: #f97316;
+  --danger: #ef4444;
+  --surface: #ffffff;
+  --bg: #f0f2ff;
+  --text-primary: #1e1b4b;
+  --text-secondary: #6b7280;
+  --border: #e5e7eb;
+  --shadow-sm: 0 1px 3px rgba(79,70,229,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow: 0 4px 16px rgba(79,70,229,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 40px rgba(79,70,229,0.18), 0 4px 16px rgba(0,0,0,0.08);
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', 'Roboto', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+/* Cards */
+mat-card {
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: 1px solid rgba(79,70,229,0.06) !important;
+  transition: box-shadow 0.25s ease, transform 0.2s ease !important;
+}
+mat-card:hover {
+  box-shadow: var(--shadow) !important;
+}
+
+.mat-mdc-card-content { padding: 16px !important; }
+
+/* Buttons */
+.mat-mdc-raised-button.mat-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
+  box-shadow: 0 4px 14px rgba(79,70,229,0.35) !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px !important;
+}
+.mat-mdc-raised-button.mat-primary:hover {
+  box-shadow: 0 6px 20px rgba(79,70,229,0.45) !important;
+  transform: translateY(-1px);
+}
+
+/* Page heading */
+.page-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-title mat-icon {
+  color: var(--primary);
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.fade-in { animation: fadeIn 0.4s ease forwards; }
+.slide-in { animation: slideIn 0.35s ease forwards; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(79,70,229,0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(79,70,229,0.4); }
+
+/* Chips */
+.chip-active { background: #d1fae5 !important; color: #065f46 !important; font-weight: 600 !important; }
+.chip-inactive { background: #fee2e2 !important; color: #991b1b !important; font-weight: 600 !important; }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 56px 24px;
+  color: var(--text-secondary);
+}
+.empty-state mat-icon {
+  font-size: 56px;
+  width: 56px;
+  height: 56px;
+  opacity: 0.35;
+  margin-bottom: 12px;
+}
+.empty-state p {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+/* ── Angular Material Form Fields ── */
+
+/* Asegurar padding correcto en el input del campo outline */
+.mat-mdc-form-field-appearance-outline .mat-mdc-form-field-infix,
+.mdc-text-field--outlined .mdc-text-field__input {
+  padding-left: 4px !important;
+}
+
+/* Fondo del label para que el notch sea correcto en fondo coloreado */
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline__notch {
+  border-left: none !important;
+}
+
+/* Ajuste para que el label flotante no "tape" el borde */
+.mat-mdc-form-field .mdc-floating-label {
+  will-change: transform;
+}
+
+/* Formularios dentro de mat-card tienen fondo blanco */
+mat-card .mat-mdc-form-field .mdc-notched-outline__leading,
+mat-card .mat-mdc-form-field .mdc-notched-outline__notch,
+mat-card .mat-mdc-form-field .mdc-notched-outline__trailing {
+  background: transparent;
+}
+
+/* ── Tooltip-like badge ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}

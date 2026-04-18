@@ -1,0 +1,129 @@
+<div class="form-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>{{ editMode() ? 'edit' : 'add_circle' }}</mat-icon>
+        {{ editMode() ? 'Editar Pedido' : 'Nuevo Pedido' }}
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (loading() && editMode()) {
+        <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+      } @else {
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="order-form">
+
+          <h3 class="section-title"><mat-icon>inventory_2</mat-icon> Información del Producto</h3>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Nombre del producto *</mat-label>
+            <input matInput formControlName="productName" placeholder="Ej: Anillo de oro con diamante">
+            <mat-icon matSuffix>diamond</mat-icon>
+            @if (form.get('productName')?.hasError('required')) {
+              <mat-error>El nombre del producto es requerido</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Descripción del producto</mat-label>
+            <textarea matInput formControlName="description" rows="3"
+                      placeholder="Detalles del trabajo a realizar..."></textarea>
+          </mat-form-field>
+
+          <!-- Photo Upload -->
+          <div class="photo-section">
+            <label class="photo-label">Foto del producto</label>
+            <div class="photo-actions">
+              <label class="upload-btn" for="fileInput">
+                <mat-icon>photo_library</mat-icon>
+                Galería
+                <input id="fileInput" type="file" accept="image/*" (change)="onFileSelected($event)" hidden>
+              </label>
+              <label class="upload-btn camera-btn" for="cameraInput">
+                <mat-icon>photo_camera</mat-icon>
+                Cámara
+                <input id="cameraInput" type="file" accept="image/*" capture="environment"
+                       (change)="onCameraCapture($event)" hidden>
+              </label>
+            </div>
+            @if (uploadingPhoto()) {
+              <div class="upload-progress"><mat-spinner diameter="24"></mat-spinner> Subiendo foto...</div>
+            }
+            @if (previewUrl()) {
+              <div class="photo-preview">
+                <img [src]="previewUrl()" alt="Preview" class="preview-img">
+              </div>
+            }
+          </div>
+
+          <h3 class="section-title"><mat-icon>person</mat-icon> Información del Cliente</h3>
+
+          <div class="two-cols">
+            <mat-form-field appearance="outline">
+              <mat-label>Nombre del cliente *</mat-label>
+              <input matInput formControlName="clientName">
+              <mat-icon matSuffix>person</mat-icon>
+              @if (form.get('clientName')?.hasError('required')) {
+                <mat-error>El nombre del cliente es requerido</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Celular del cliente</mat-label>
+              <input matInput formControlName="clientPhone" type="tel" placeholder="+57 300 000 0000">
+              <mat-icon matSuffix>phone</mat-icon>
+              @if (form.get('clientPhone')?.hasError('pattern')) {
+                <mat-error>Número de teléfono inválido</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Dirección del cliente</mat-label>
+            <input matInput formControlName="clientAddress" placeholder="Dirección de entrega">
+            <mat-icon matSuffix>location_on</mat-icon>
+          </mat-form-field>
+
+          <h3 class="section-title"><mat-icon>event</mat-icon> Entrega y Precio</h3>
+
+          <div class="two-cols">
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha de entrega *</mat-label>
+              <input matInput [matDatepicker]="picker" formControlName="deliveryDate" [min]="minDate">
+              <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+              @if (form.get('deliveryDate')?.hasError('required')) {
+                <mat-error>La fecha de entrega es requerida</mat-error>
+              }
+              @if (form.get('deliveryDate')?.hasError('matDatepickerMin')) {
+                <mat-error>La fecha debe ser en el futuro</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Precio total</mat-label>
+              <input matInput type="text" inputmode="numeric"
+                     formControlName="totalPriceDisplay"
+                     (input)="onPriceInput($event)"
+                     placeholder="0">
+              <mat-icon matSuffix>attach_money</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="form-actions">
+            <button mat-button type="button" (click)="cancel()">Cancelar</button>
+            <button mat-raised-button color="primary" type="submit"
+                    [disabled]="form.invalid || loading()">
+              @if (loading()) {
+                <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+                Guardando...
+              } @else {
+                {{ editMode() ? 'Actualizar' : 'Crear Pedido' }}
+              }
+            </button>
+          </div>
+        </form>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

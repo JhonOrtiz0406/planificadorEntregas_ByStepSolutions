@@ -1,0 +1,202 @@
+.list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ── */
+.list-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1e1b4b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+}
+
+.page-title mat-icon {
+  color: #4f46e5;
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.page-subtitle {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.88rem;
+}
+
+.new-btn {
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+}
+
+/* ── Filters ── */
+.filter-card {
+  padding: 16px !important;
+}
+
+.filter-inner {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-field { flex: 2; min-width: 200px; }
+.status-field { flex: 1; min-width: 160px; }
+
+.results-count {
+  color: #6b7280;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  padding-bottom: 20px;
+}
+
+.results-count span {
+  background: #f0f2ff;
+  color: #4f46e5;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* ── Table ── */
+.table-card { overflow: hidden; }
+
+.loading-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px;
+  gap: 14px;
+  color: #6b7280;
+}
+
+.orders-table { width: 100%; }
+
+.mat-mdc-header-cell {
+  font-weight: 700 !important;
+  color: #6b7280 !important;
+  font-size: 0.78rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #fafafa;
+}
+
+.clickable-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.clickable-row:hover {
+  background: #f5f3ff !important;
+}
+
+.order-num-cell {
+  font-weight: 700;
+  color: #4f46e5;
+  font-size: 0.9rem;
+}
+
+.product-name {
+  font-weight: 500;
+  color: #1e1b4b;
+}
+
+.client-cell {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #374151;
+}
+.client-cell mat-icon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+  color: #9ca3af;
+}
+
+.date-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #374151;
+  flex-wrap: wrap;
+}
+.date-cell mat-icon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+  color: #9ca3af;
+}
+
+.badge-overdue {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+.badge-soon {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+.view-btn {
+  color: #9ca3af !important;
+  transition: color 0.2s !important;
+}
+.view-btn mat-icon { font-size: 16px !important; }
+.clickable-row:hover .view-btn { color: #4f46e5 !important; }
+
+.chip-not_started { background: #f3f4f6 !important; color: #374151 !important; font-size: 0.72rem !important; }
+.chip-in_preparation { background: #dbeafe !important; color: #1e40af !important; font-size: 0.72rem !important; }
+.chip-delivered { background: #d1fae5 !important; color: #065f46 !important; font-size: 0.72rem !important; }
+.chip-pay-unpaid { background: #fee2e2 !important; color: #991b1b !important; font-size: 0.72rem !important; }
+.chip-pay-partial { background: #fef3c7 !important; color: #92400e !important; font-size: 0.72rem !important; }
+.chip-pay-paid { background: #d1fae5 !important; color: #065f46 !important; font-size: 0.72rem !important; }
+
+.empty-state {
+  text-align: center;
+  padding: 56px 24px;
+  color: #9ca3af;
+}
+.empty-state mat-icon {
+  font-size: 52px;
+  width: 52px;
+  height: 52px;
+  opacity: 0.3;
+  margin-bottom: 12px;
+}
+.empty-state p { font-size: 1rem; margin: 0 0 6px; color: #6b7280; }
+.empty-state small { font-size: 0.82rem; }
+
+@media (max-width: 768px) {
+  .filter-inner { flex-direction: column; }
+  .search-field, .status-field { width: 100%; }
+}

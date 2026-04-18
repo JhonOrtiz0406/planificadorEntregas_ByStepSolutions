@@ -1,0 +1,278 @@
+/* ── Layout ── */
+.app-container { height: 100vh; }
+
+/* ── Toolbar ── */
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+  box-shadow: 0 2px 20px rgba(79,70,229,0.35) !important;
+  height: 64px !important;
+  padding: 0 16px !important;
+}
+
+.menu-btn {
+  color: white !important;
+  margin-right: 4px !important;
+}
+
+.toolbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+}
+
+.toolbar-icon {
+  font-size: 26px;
+  width: 26px;
+  height: 26px;
+  color: rgba(255,255,255,0.9);
+}
+
+.toolbar-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.3px;
+}
+
+.toolbar-spacer { flex: 1 1 auto; }
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 24px;
+  padding: 4px 12px 4px 8px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+}
+
+.user-chip mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.user-menu-btn {
+  color: white !important;
+}
+
+/* ── Sidenav ── */
+.app-sidenav {
+  width: 280px;
+  background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%) !important;
+  border-right: none !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidenav-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.brand-logo {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #4f46e5, #818cf8);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(79,70,229,0.4);
+  flex-shrink: 0;
+}
+
+.brand-icon {
+  font-size: 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+  color: white;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1.2;
+}
+
+.brand-tagline {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.sidenav-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.04);
+  margin: 12px 12px 0;
+  border-radius: 12px;
+}
+
+.user-avatar-icon {
+  font-size: 36px !important;
+  width: 36px !important;
+  height: 36px !important;
+  color: rgba(255,255,255,0.6);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.user-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.45);
+  margin-top: 1px;
+}
+
+.sidenav-nav-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  padding: 20px 20px 8px;
+}
+
+.sidenav-nav {
+  flex: 1;
+  padding: 0 10px !important;
+}
+
+.nav-item {
+  border-radius: 10px !important;
+  margin-bottom: 4px !important;
+  color: rgba(255,255,255,0.7) !important;
+  transition: background 0.2s, color 0.2s !important;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.08) !important;
+  color: white !important;
+}
+
+.active-link {
+  background: linear-gradient(135deg, rgba(79,70,229,0.7), rgba(129,140,248,0.4)) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(79,70,229,0.3) !important;
+}
+
+.active-link mat-icon {
+  color: #a5b4fc !important;
+}
+
+.sidenav-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  margin-top: auto;
+}
+
+.footer-brand-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255,255,255,0.35);
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.footer-brand-link:hover {
+  color: rgba(255,255,255,0.7);
+}
+
+.footer-brand-link mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Main content ── */
+.app-content {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Footer ── */
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px;
+  color: #9ca3af;
+  font-size: 0.78rem;
+  border-top: 1px solid rgba(79,70,229,0.08);
+  background: white;
+  margin-top: 32px;
+}
+
+.footer-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.footer-link:hover { opacity: 0.7; }
+
+.footer-link mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 768px) {
+  .app-content { padding: 12px; }
+  .user-chip { display: none; }
+}

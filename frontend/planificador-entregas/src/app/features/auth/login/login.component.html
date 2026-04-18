@@ -1,0 +1,69 @@
+<div class="login-container">
+  <div class="login-bg-shapes">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+  </div>
+
+  <mat-card class="login-card">
+    <div class="login-top">
+      <div class="logo-circle">
+        <mat-icon class="logo-icon">local_shipping</mat-icon>
+      </div>
+      <h1 class="app-title">{{ appName }}</h1>
+      <p class="app-subtitle">Planificador Inteligente de Entregas</p>
+    </div>
+
+    <mat-card-content class="login-content">
+      @if (invitationToken) {
+        <div class="invitation-banner">
+          <mat-icon>mail_outline</mat-icon>
+          <span>Has sido invitado a unirte. Inicia sesión para continuar.</span>
+        </div>
+      }
+
+      <div class="divider-line">
+        <span>Acceso seguro</span>
+      </div>
+
+      <p class="login-description">
+        Inicia sesión con tu cuenta de Google para gestionar tus pedidos y entregas
+      </p>
+
+      @if (loading) {
+        <div class="loading-area">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Iniciando sesión...</p>
+        </div>
+      } @else {
+        <div class="google-btn-container" #googleBtn></div>
+      }
+
+      <div class="features-row">
+        <div class="feature-chip">
+          <mat-icon>calendar_today</mat-icon>
+          <span>Calendario</span>
+        </div>
+        <div class="feature-chip">
+          <mat-icon>notifications_active</mat-icon>
+          <span>Alertas</span>
+        </div>
+        <div class="feature-chip">
+          <mat-icon>people</mat-icon>
+          <span>Equipos</span>
+        </div>
+      </div>
+    </mat-card-content>
+
+    <div class="login-footer">
+      <div class="footer-brand">
+        <mat-icon>business</mat-icon>
+        <a href="https://www.bystepsolutions.tech/" target="_blank" class="brand-link">
+          ByStep Solutions
+        </a>
+      </div>
+      <span class="footer-sep">·</span>
+      <small class="footer-copy">Soluciones digitales para tu negocio</small>
+    </div>
+  </mat-card>
+</div>

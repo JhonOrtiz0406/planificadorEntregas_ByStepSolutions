@@ -1,0 +1,156 @@
+@let o = org();
+@if (loading()) {
+  <div style="display:flex;justify-content:center;padding:80px"><mat-spinner diameter="48"></mat-spinner></div>
+} @else if (loadError()) {
+  <div style="display:flex;flex-direction:column;align-items:center;padding:80px 24px;color:#6b7280;text-align:center">
+    <mat-icon style="font-size:56px;width:56px;height:56px;color:#ef4444;opacity:.6;margin-bottom:16px">error_outline</mat-icon>
+    <h2 style="margin:0 0 8px;color:#1e1b4b">No se pudo cargar la organización</h2>
+    <p style="margin:0 0 24px">La organización no existe o no tienes acceso.</p>
+    <button mat-raised-button color="primary" routerLink="/organizations">
+      <mat-icon>arrow_back</mat-icon> Volver a Organizaciones
+    </button>
+  </div>
+} @else if (o) {
+  <div style="display:flex;flex-direction:column;gap:24px">
+    <!-- Org Info -->
+    <mat-card>
+      <mat-card-header>
+        @if (o.iconName) {
+          <mat-icon mat-card-avatar style="font-size:40px;color:#6366f1">{{ o.iconName }}</mat-icon>
+        } @else if (o.logoUrl) {
+          <img mat-card-avatar [src]="o.logoUrl" [alt]="o.name">
+        } @else {
+          <mat-icon mat-card-avatar style="font-size:40px">business</mat-icon>
+        }
+        <mat-card-title>{{ o.name }}</mat-card-title>
+        <mat-card-subtitle>{{ o.adminEmail }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <mat-chip [class]="o.active ? 'chip-active' : 'chip-inactive'">
+            {{ o.active ? 'Activa' : 'Inactiva' }}
+          </mat-chip>
+
+          @if (authService.isOrgAdmin()) {
+            <button mat-stroked-button (click)="openIconPicker()" style="font-size:.85rem">
+              <mat-icon>palette</mat-icon> Cambiar icono
+            </button>
+          }
+
+          @if (authService.isPlatformAdmin()) {
+            <button mat-stroked-button (click)="toggleOrgStatus()"
+                    [color]="o.active ? 'warn' : 'primary'" style="font-size:.85rem">
+              <mat-icon>{{ o.active ? 'block' : 'check_circle' }}</mat-icon>
+              {{ o.active ? 'Deshabilitar' : 'Habilitar' }}
+            </button>
+            @if (!o.active) {
+              <button mat-stroked-button color="warn" (click)="openDeleteOrgDialog()" style="font-size:.85rem">
+                <mat-icon>delete_forever</mat-icon> Eliminar organización
+              </button>
+            }
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Invite Member -->
+    @if (authService.isOrgAdmin() || authService.isPlatformAdmin()) {
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title><mat-icon>person_add</mat-icon> Invitar Miembro</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="inviteForm" (ngSubmit)="inviteMember()" style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+            <mat-form-field appearance="outline" style="flex:2;min-width:200px">
+              <mat-label>Email del miembro</mat-label>
+              <input matInput formControlName="email" type="email" placeholder="miembro@empresa.com">
+              <mat-icon matSuffix>email</mat-icon>
+            </mat-form-field>
+            <mat-form-field appearance="outline" style="flex:1;min-width:150px">
+              <mat-label>Rol</mat-label>
+              <mat-select formControlName="role">
+                <mat-option value="ORG_ADMIN">Administrador</mat-option>
+                <mat-option value="ORG_EMPLOYEE">Empleado</mat-option>
+                <mat-option value="ORG_DELIVERY">Repartidor</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <button mat-raised-button color="primary" type="submit" [disabled]="inviteForm.invalid || inviting()">
+              @if (inviting()) { <mat-spinner diameter="20" style="display:inline-block;margin-right:8px"></mat-spinner> }
+              <mat-icon>send</mat-icon> Invitar
+            </button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Members -->
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title><mat-icon>group</mat-icon> Miembros ({{ members().length }})</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <table mat-table [dataSource]="members()" style="width:100%">
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let m" style="width:40px">
+              @if (!m.active) {
+                <mat-icon title="Inhabilitado" style="color:#f59e0b;font-size:20px;vertical-align:middle">
+                  person_off
+                </mat-icon>
+              } @else {
+                <mat-icon style="color:#22c55e;font-size:20px;vertical-align:middle">
+                  person
+                </mat-icon>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let m" [style.opacity]="m.active ? 1 : 0.5">
+              {{ m.name || '—' }}
+              @if (!m.active) {
+                <span style="font-size:.75rem;color:#f59e0b;margin-left:6px">(Inhabilitado)</span>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <td mat-cell *matCellDef="let m" [style.opacity]="m.active ? 1 : 0.5">{{ m.email }}</td>
+          </ng-container>
+          <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef>Rol</th>
+            <td mat-cell *matCellDef="let m">
+              <mat-chip [style.opacity]="m.active ? 1 : 0.5">{{ getRoleLabel(m.role) }}</mat-chip>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let m">
+              @if (canManageMember(m)) {
+                @if (m.active) {
+                  <button mat-icon-button color="warn" title="Inhabilitar" (click)="deactivateMember(m.id)">
+                    <mat-icon>person_off</mat-icon>
+                  </button>
+                } @else {
+                  <button mat-icon-button color="warn" title="Gestionar cuenta inhabilitada"
+                          (click)="openInactiveMemberDialog(m)">
+                    <mat-icon>manage_accounts</mat-icon>
+                  </button>
+                }
+              }
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="memberColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: memberColumns;"
+              [style.background]="!row.active ? '#fef9f0' : 'transparent'"></tr>
+        </table>
+        @if (members().length === 0) {
+          <div style="text-align:center;padding:32px;color:#999">
+            <mat-icon style="font-size:40px;width:40px;height:40px">group_off</mat-icon>
+            <p>No hay miembros registrados</p>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+}

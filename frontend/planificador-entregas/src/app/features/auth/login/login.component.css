@@ -1,0 +1,235 @@
+/* ── Background ── */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4338ca 70%, #4f46e5 100%);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-bg-shapes { position: absolute; inset: 0; pointer-events: none; }
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  animation: float 8s ease-in-out infinite;
+}
+.shape-1 { width: 400px; height: 400px; top: -100px; right: -80px; animation-delay: 0s; }
+.shape-2 { width: 300px; height: 300px; bottom: -80px; left: -60px; animation-delay: 2s; }
+.shape-3 { width: 200px; height: 200px; top: 40%; left: 10%; animation-delay: 4s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.03); }
+}
+
+/* ── Card ── */
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 24px !important;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08) !important;
+  overflow: hidden;
+  background: white !important;
+  animation: cardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Top section ── */
+.login-top {
+  background: linear-gradient(135deg, #4f46e5 0%, #1e1b4b 100%);
+  padding: 36px 32px 32px;
+  text-align: center;
+  position: relative;
+}
+
+.login-top::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: white;
+  border-radius: 24px 24px 0 0;
+}
+
+.logo-circle {
+  width: 72px;
+  height: 72px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  border: 2px solid rgba(255,255,255,0.2);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.logo-icon {
+  font-size: 40px !important;
+  width: 40px !important;
+  height: 40px !important;
+  color: white;
+}
+
+.app-title {
+  margin: 0 0 6px;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+.app-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.7);
+  font-weight: 400;
+}
+
+/* ── Content ── */
+.login-content {
+  padding: 8px 32px 28px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.invitation-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  border-radius: 12px;
+  color: #5b21b6;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid rgba(109,40,217,0.2);
+}
+
+.divider-line {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.divider-line::before,
+.divider-line::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.login-description {
+  text-align: center;
+  color: #6b7280;
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.google-btn-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.loading-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  color: #6b7280;
+  padding: 8px 0;
+}
+
+/* ── Features ── */
+.features-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.feature-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: #f0f2ff;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #4f46e5;
+  border: 1px solid rgba(79,70,229,0.15);
+}
+
+.feature-chip mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Footer ── */
+.login-footer {
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-top: 1px solid #f3f4f6;
+  flex-wrap: wrap;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.footer-brand mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  color: #4f46e5;
+}
+
+.brand-link {
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.82rem;
+  transition: opacity 0.2s;
+}
+.brand-link:hover { opacity: 0.7; }
+
+.footer-sep { color: #d1d5db; }
+
+.footer-copy {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}

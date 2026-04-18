@@ -1,0 +1,105 @@
+services:
+  # ============================================================
+  # Backend - Spring Boot
+  # Build context: ./backend  |  Dockerfile: deployment/Dockerfile
+  # ============================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: deployment/Dockerfile
+    container_name: delivery-planner-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # ── Database (Supabase / PostgreSQL) ──────────────────────
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-postgres}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      # ── Security ─────────────────────────────────────────────
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      # ── Email / SMTP (Gmail) ──────────────────────────────────
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      # ── Firebase (Push Notifications + Storage) ───────────────
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON}
+      FIREBASE_STORAGE_BUCKET: ${FIREBASE_STORAGE_BUCKET}
+      # ── App ──────────────────────────────────────────────────
+      APP_NAME: ${APP_NAME:-DeliveryPlanner}
+      APP_DISPLAY_NAME: ${APP_DISPLAY_NAME}
+      APP_URL: ${APP_URL}
+      SERVER_PORT: ${SERVER_PORT:-8084}
+      PLATFORM_ADMIN_EMAIL: ${PLATFORM_ADMIN_EMAIL}
+    expose:
+      - "8084"
+    networks:
+      - delivery-network
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://localhost:8084/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================
+  # Frontend - Angular 19 + Nginx
+  # Build context: ./frontend/planificador-entregas
+  #
+  # Build args (baked into Angular bundle at build time):
+  #   API_URL          – Leave empty ("") to use nginx /api proxy (same-stack).
+  #                      Set to backend public URL for separate deployments.
+  #   BACKEND_URL      – nginx proxy target for /api (same-stack mode only).
+  #                      Default: backend:8084
+  # All values come from .env at root.
+  # ============================================================
+  frontend:
+    build:
+      context: ./frontend/planificador-entregas
+      dockerfile: Dockerfile
+      args:
+        API_URL: ${API_URL:-}
+        APP_NAME: ${APP_NAME:-DeliveryPlanner}
+        GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+        FIREBASE_API_KEY: ${FIREBASE_API_KEY}
+        FIREBASE_AUTH_DOMAIN: ${FIREBASE_AUTH_DOMAIN}
+        FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+        FIREBASE_STORAGE_BUCKET: ${FIREBASE_STORAGE_BUCKET}
+        FIREBASE_MESSAGING_SENDER_ID: ${FIREBASE_MESSAGING_SENDER_ID}
+        FIREBASE_APP_ID: ${FIREBASE_APP_ID}
+        FIREBASE_VAPID_KEY: ${FIREBASE_VAPID_KEY}
+    container_name: delivery-planner-frontend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # nginx proxy target for /api requests (same-stack mode)
+      BACKEND_URL: ${BACKEND_URL:-backend:8084}
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - delivery-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  delivery-network:
+    driver: bridge
+    name: delivery-network

@@ -1,0 +1,123 @@
+@let o = order();
+@if (loading()) {
+  <div class="loading-center"><mat-spinner diameter="48"></mat-spinner></div>
+} @else if (o) {
+  <div class="detail-container">
+    <!-- Header -->
+    <div class="detail-header">
+      <button mat-icon-button routerLink="/orders"><mat-icon>arrow_back</mat-icon></button>
+      <div class="header-info">
+        <h2>{{ o.orderNumber }}</h2>
+        <span>{{ o.productName }}</span>
+      </div>
+      <span class="header-spacer"></span>
+      @if (authService.canManageOrders()) {
+        <button mat-icon-button [routerLink]="['/orders', o.id, 'edit']" color="primary">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteOrder()">
+          <mat-icon>delete</mat-icon>
+        </button>
+      }
+    </div>
+
+    <div class="detail-grid">
+      <!-- Order Info -->
+      <mat-card class="info-card">
+        <mat-card-header><mat-card-title><mat-icon>inventory_2</mat-icon> Producto</mat-card-title></mat-card-header>
+        <mat-card-content>
+          @if (o.photoUrl) {
+            <img [src]="o.photoUrl" alt="Foto del producto" class="product-photo">
+          }
+          <div class="info-row"><mat-icon>diamond</mat-icon><span>{{ o.productName }}</span></div>
+          @if (o.description) {
+            <div class="info-row"><mat-icon>notes</mat-icon><span>{{ o.description }}</span></div>
+          }
+          <div class="info-row"><mat-icon>event</mat-icon>
+            <span>Entrega: <strong>{{ o.deliveryDate | date:'dd/MM/yyyy' }}</strong>
+              @if (o.overdue) { <span class="badge-overdue">VENCIDO</span> }
+              @else { <span class="days-info">({{ o.daysUntilDelivery }} días)</span> }
+            </span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Client Info -->
+      <mat-card class="info-card">
+        <mat-card-header><mat-card-title><mat-icon>person</mat-icon> Cliente</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div class="info-row"><mat-icon>person</mat-icon><span>{{ o.clientName }}</span></div>
+          @if (o.clientPhone) {
+            <div class="info-row">
+              <mat-icon>phone</mat-icon>
+              <a [href]="'tel:' + o.clientPhone">{{ o.clientPhone }}</a>
+            </div>
+          }
+          @if (o.clientAddress) {
+            <div class="info-row"><mat-icon>location_on</mat-icon><span>{{ o.clientAddress }}</span></div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Payment Info -->
+      <mat-card class="info-card">
+        <mat-card-header><mat-card-title><mat-icon>payments</mat-icon> Pago</mat-card-title></mat-card-header>
+        <mat-card-content>
+          @if (o.totalPrice) {
+            <div class="info-row"><mat-icon>attach_money</mat-icon><span>Total: <strong>{{ o.totalPrice | currency:'COP':'symbol':'1.0-0' }}</strong></span></div>
+          }
+          @if (o.paymentAmount) {
+            <div class="info-row"><mat-icon>account_balance_wallet</mat-icon><span>Abonado: {{ o.paymentAmount | currency:'COP':'symbol':'1.0-0' }}</span></div>
+          }
+          @if (o.balanceDue && o.balanceDue > 0) {
+            <div class="info-row balance-due"><mat-icon>warning</mat-icon><span>Saldo: <strong>{{ o.balanceDue | currency:'COP':'symbol':'1.0-0' }}</strong></span></div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Status Update -->
+      @if (authService.canUpdateStatus()) {
+        <mat-card class="status-card">
+          <mat-card-header><mat-card-title><mat-icon>update</mat-icon> Actualizar Estado</mat-card-title></mat-card-header>
+          <mat-card-content>
+            <form [formGroup]="statusForm" class="status-form">
+              <mat-form-field appearance="outline" class="full-w">
+                <mat-label>Estado del pedido</mat-label>
+                <mat-select formControlName="progressStatus">
+                  @for (opt of progressOptions; track opt.value) {
+                    <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-w">
+                <mat-label>Estado de pago</mat-label>
+                <mat-select formControlName="paymentStatus">
+                  @for (opt of paymentOptions; track opt.value) {
+                    <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              @if (isPartialPayment) {
+                <mat-form-field appearance="outline" class="full-w">
+                  <mat-label>Monto del abono</mat-label>
+                  <input matInput type="number" formControlName="paymentAmount" min="0">
+                  <mat-icon matSuffix>attach_money</mat-icon>
+                </mat-form-field>
+              }
+
+              <button mat-raised-button color="primary" type="button"
+                      (click)="updateStatus()" [disabled]="updating()">
+                @if (updating()) {
+                  <mat-spinner diameter="20" style="display:inline-block;margin-right:8px;"></mat-spinner>
+                }
+                Guardar Estado
+              </button>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  </div>
+}

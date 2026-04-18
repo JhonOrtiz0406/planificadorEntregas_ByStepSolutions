@@ -1,0 +1,145 @@
+<div class="dashboard-container">
+
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div>
+      <h2 class="page-title">
+        <mat-icon>dashboard</mat-icon>
+        Panel de Control
+      </h2>
+      <p class="page-subtitle">Resumen de entregas y estado de pedidos</p>
+    </div>
+    @if (authService.canManageOrders()) {
+      <button mat-raised-button color="primary" (click)="navigateToNewOrder()" class="new-order-btn">
+        <mat-icon>add_circle</mat-icon>
+        Nuevo Pedido
+      </button>
+    }
+  </div>
+
+  <!-- Stats Summary -->
+  <div class="stats-row">
+    <div class="stat-card stat-overdue">
+      <div class="stat-icon-wrap">
+        <mat-icon>warning_amber</mat-icon>
+      </div>
+      <div class="stat-body">
+        <h3>{{ overdueCount }}</h3>
+        <p>Vencidos</p>
+      </div>
+      <div class="stat-bg-icon">
+        <mat-icon>warning_amber</mat-icon>
+      </div>
+    </div>
+    <div class="stat-card stat-today">
+      <div class="stat-icon-wrap">
+        <mat-icon>today</mat-icon>
+      </div>
+      <div class="stat-body">
+        <h3>{{ todayCount }}</h3>
+        <p>Entregan hoy</p>
+      </div>
+      <div class="stat-bg-icon">
+        <mat-icon>today</mat-icon>
+      </div>
+    </div>
+    <div class="stat-card stat-total">
+      <div class="stat-icon-wrap">
+        <mat-icon>inventory_2</mat-icon>
+      </div>
+      <div class="stat-body">
+        <h3>{{ pendingOrders().length }}</h3>
+        <p>Por entregar</p>
+      </div>
+      <div class="stat-bg-icon">
+        <mat-icon>inventory_2</mat-icon>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar -->
+  <mat-card class="calendar-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>calendar_month</mat-icon>
+        Calendario de Entregas
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (loading()) {
+        <div class="loading-center">
+          <mat-spinner diameter="48"></mat-spinner>
+          <p>Cargando calendario...</p>
+        </div>
+      } @else {
+        <full-calendar [options]="calendarOptions"></full-calendar>
+        <div class="calendar-legend">
+          <span class="legend-item legend-ok">Más de 5 días</span>
+          <span class="legend-item legend-soon">5 días</span>
+          <span class="legend-item legend-warning">3 días</span>
+          <span class="legend-item legend-critical">1 día / Hoy</span>
+          <span class="legend-item legend-overdue">Vencido</span>
+          <span class="legend-item legend-delivered">Entregado</span>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Pending Orders List -->
+  <mat-card class="orders-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>list_alt</mat-icon>
+        Pedidos Por Entregar
+      </mat-card-title>
+      <span class="count-badge">{{ pendingOrders().length }}</span>
+    </mat-card-header>
+    <mat-card-content>
+      @if (pendingOrders().length === 0 && !loading()) {
+        <div class="empty-state">
+          <mat-icon>check_circle_outline</mat-icon>
+          <p>¡Todo al día! No hay pedidos pendientes</p>
+        </div>
+      }
+      <div class="orders-list">
+        @for (order of pendingOrders(); track order.id) {
+          <div class="order-item" [class]="getDaysClass(order)" (click)="navigateToOrder(order)">
+            <div class="order-days-badge" [class]="getDaysClass(order)">
+              <span>{{ getDaysLabel(order.daysUntilDelivery, order.overdue) }}</span>
+            </div>
+            <div class="order-info">
+              <div class="order-number-name">
+                <strong class="order-num">#{{ order.orderNumber }}</strong>
+                <span class="order-product">{{ order.productName }}</span>
+              </div>
+              <div class="order-client">
+                <mat-icon>person_outline</mat-icon>
+                {{ order.clientName }}
+              </div>
+              @if (order.clientPhone) {
+                <div class="order-phone">
+                  <mat-icon>phone</mat-icon>
+                  {{ order.clientPhone }}
+                </div>
+              }
+            </div>
+            <div class="order-status">
+              <mat-chip [class]="'chip-' + order.progressStatus.toLowerCase()">
+                {{ getStatusLabel(order.progressStatus) }}
+              </mat-chip>
+              <mat-chip [class]="'chip-payment-' + order.paymentStatus.toLowerCase()">
+                {{ getPaymentLabel(order.paymentStatus) }}
+              </mat-chip>
+              <small class="delivery-date">
+                <mat-icon>event</mat-icon>
+                {{ order.deliveryDate | date:'dd/MM/yyyy' }}
+              </small>
+            </div>
+            <mat-icon class="order-arrow">chevron_right</mat-icon>
+          </div>
+          <mat-divider></mat-divider>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
