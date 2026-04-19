@@ -75,7 +75,7 @@
         </mat-card-content>
       </mat-card>
 
-      <!-- Status Update -->
+      <!-- Status Update (ORG_ADMIN only) -->
       @if (authService.canUpdateStatus()) {
         <mat-card class="status-card">
           <mat-card-header><mat-card-title><mat-icon>update</mat-icon> Actualizar Estado</mat-card-title></mat-card-header>
@@ -119,5 +119,19 @@
         </mat-card>
       }
     </div>
+
+    <!-- Back button for read-only roles (ORG_EMPLOYEE / ORG_DELIVERY) -->
+    @if (!authService.canUpdateStatus()) {
+      <div class="readonly-actions">
+        <button mat-raised-button routerLink="/orders">
+          <mat-icon>arrow_back</mat-icon>
+          Volver a Pedidos
+        </button>
+        <button mat-raised-button color="primary" routerLink="/dashboard">
+          <mat-icon>calendar_month</mat-icon>
+          Volver al Calendario
+        </button>
+      </div>
+    }
   </div>
 }

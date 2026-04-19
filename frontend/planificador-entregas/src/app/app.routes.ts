@@ -31,7 +31,7 @@ export const routes: Routes = [
       },
       {
         path: 'new',
-        canActivate: [roleGuard('ORG_ADMIN')],
+        canActivate: [roleGuard('ORG_ADMIN', 'ORG_EMPLOYEE')],
         loadComponent: () => import('./features/orders/order-form/order-form.component').then(m => m.OrderFormComponent)
       },
       {

@@ -116,7 +116,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ORG_ADMIN','ORG_EMPLOYEE')")
+    @PreAuthorize("hasRole('ORG_ADMIN')")
     public ResponseEntity<ApiResponse<OrderResponse>> updateStatus(
             @PathVariable("id") UUID id,
             @RequestBody UpdateOrderStatusRequest request,

@@ -17,7 +17,7 @@ public class InvitationUseCase {
     private final InvitationGateway invitationGateway;
     private final EmailGateway emailGateway;
 
-    public Invitation create(String email, UserRole role, UUID organizationId) {
+    public Invitation create(String email, UserRole role, UUID organizationId, String organizationName) {
         Invitation invitation = Invitation.builder()
                 .email(email)
                 .role(role)
@@ -28,7 +28,7 @@ public class InvitationUseCase {
                 .createdAt(LocalDateTime.now())
                 .build();
         Invitation saved = invitationGateway.save(invitation);
-        emailGateway.sendInvitation(email, saved.getToken());
+        emailGateway.sendInvitation(email, saved.getToken(), organizationName);
         return saved;
     }
 

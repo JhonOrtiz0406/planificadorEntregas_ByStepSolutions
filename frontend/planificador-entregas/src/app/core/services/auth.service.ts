@@ -144,7 +144,7 @@ export class AuthService {
   }
 
   canUpdateStatus(): boolean {
-    return this.hasRole('ORG_ADMIN', 'ORG_EMPLOYEE');
+    return this.hasRole('ORG_ADMIN');
   }
 
   canAccessOrders(): boolean {

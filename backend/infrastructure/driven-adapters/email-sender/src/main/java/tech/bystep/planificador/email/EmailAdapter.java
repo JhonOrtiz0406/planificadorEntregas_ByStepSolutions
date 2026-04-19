@@ -40,20 +40,19 @@ public class EmailAdapter implements EmailGateway {
     }
 
     @Override
-    public void sendInvitation(String to, String token) {
+    public void sendInvitation(String to, String token, String organizationName) {
         if (fromAddress.isBlank()) {
             log.warn("Skipping invitation email to {} — MAIL_USERNAME is not configured.", to);
             return;
         }
 
         String invitationUrl = appUrl + "/auth/invite/" + token;
-        String subject = "Invitación a DeliveryPlanner – ByStep Solutions";
-        String body = buildInvitationHtml(invitationUrl);
+        String subject = "Invitación a " + organizationName + " – ByStep Solutions";
+        String body = buildInvitationHtml(invitationUrl, organizationName);
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            // Use explicit InternetAddress to avoid "Illegal address" on bad input
             helper.setFrom(new InternetAddress(fromAddress, "DeliveryPlanner", "UTF-8"));
             helper.setTo(to);
             helper.setSubject(subject);
@@ -66,7 +65,7 @@ public class EmailAdapter implements EmailGateway {
         }
     }
 
-    private String buildInvitationHtml(String invitationUrl) {
+    private String buildInvitationHtml(String invitationUrl, String organizationName) {
         return """
                 <!DOCTYPE html>
                 <html lang="es">
@@ -96,8 +95,9 @@ public class EmailAdapter implements EmailGateway {
                               ¡Tienes una invitación!
                             </h2>
                             <p style="margin:0 0 24px;color:#4b5563;line-height:1.6">
-                              Fuiste invitado a unirte a <strong>DeliveryPlanner</strong>,
-                              la plataforma de planificación de entregas de ByStep Solutions.
+                              Fuiste invitado a unirte a <strong>%s</strong>,
+                              gestionada a través de DeliveryPlanner, la plataforma de planificación
+                              de entregas de ByStep Solutions.
                               Haz clic en el botón para aceptar la invitación e iniciar sesión
                               con tu cuenta de Google.
                             </p>
@@ -140,6 +140,6 @@ public class EmailAdapter implements EmailGateway {
                   </table>
                 </body>
                 </html>
-                """.formatted(invitationUrl, invitationUrl, invitationUrl);
+                """.formatted(organizationName, invitationUrl, invitationUrl, invitationUrl);
     }
 }
