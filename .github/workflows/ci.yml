@@ -28,6 +28,10 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Make gradlew executable
+        working-directory: backend
+        run: chmod +x gradlew
+
       - name: Build and test
         working-directory: backend
         run: ./gradlew build --no-daemon -x :app-service:bootJar
@@ -58,15 +62,15 @@ jobs:
         working-directory: frontend/planificador-entregas
         run: npm ci
 
-      - name: Build (dev)
+      - name: Build
         working-directory: frontend/planificador-entregas
         run: npm run build
 
   # ────────────────────────────────────────────────
-  # Notify Dokploy — ONLY from main (trunk)
-  # Actual deploy is handled by Dokploy watching main.
-  # This step pings Dokploy webhook to trigger deploy.
-  # Set DOKPLOY_WEBHOOK_URL in repo secrets.
+  # Notify Dokploy — ONLY on push to main (trunk)
+  # Triggers redeploy on BOTH apps (backend + frontend)
+  # after all tests pass.
+  # Requires secrets: DOKPLOY_WEBHOOK_BACKEND, DOKPLOY_WEBHOOK_FRONTEND
   # ────────────────────────────────────────────────
   notify-deploy:
     name: Trigger Dokploy Deploy
@@ -75,9 +79,12 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: Trigger Dokploy webhook
+      - name: Deploy backend
         run: |
-          curl -f -X POST "${{ secrets.DOKPLOY_WEBHOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            -d '{"branch":"main","ref":"${{ github.sha }}"}'
-        continue-on-error: true
+          curl -f -X GET "${{ secrets.DOKPLOY_WEBHOOK_BACKEND }}"
+        continue-on-error: false
+
+      - name: Deploy frontend
+        run: |
+          curl -f -X GET "${{ secrets.DOKPLOY_WEBHOOK_FRONTEND }}"
+        continue-on-error: false
