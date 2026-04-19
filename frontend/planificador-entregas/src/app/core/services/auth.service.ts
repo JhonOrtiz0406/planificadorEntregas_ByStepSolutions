@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, User } from '../models/user.model';
+import { AuthResponse, OrgChoice, User } from '../models/user.model';
 
 declare const google: any;
 
@@ -14,6 +14,10 @@ export class AuthService {
 
   private readonly TOKEN_KEY = 'dp_auth_token';
   private readonly USER_KEY = 'dp_user';
+  private readonly SELECTION_KEY = 'dp_selection_token';
+  private readonly ORG_CHOICES_KEY = 'dp_org_choices';
+
+  pendingOrgChoices = signal<OrgChoice[]>([]);
 
   currentUser = signal<User | null>(this.getStoredUser());
   isAuthenticated = signal<boolean>(this.checkAuth());
@@ -76,23 +80,72 @@ export class AuthService {
       invitationToken
     }).pipe(
       tap(response => {
-        if (response.success) {
+        if (response.success && !response.data?.requiresOrgSelection) {
           this.setSession(response.data);
         }
       })
     );
   }
 
-  private setSession(authResponse: AuthResponse): void {
+  setSession(authResponse: AuthResponse): void {
     localStorage.setItem(this.TOKEN_KEY, authResponse.token);
     localStorage.setItem(this.USER_KEY, JSON.stringify(authResponse.user));
     this.currentUser.set(authResponse.user);
     this.isAuthenticated.set(true);
   }
 
+  storeSelectionState(selectionToken: string, orgs: OrgChoice[]): void {
+    localStorage.setItem(this.SELECTION_KEY, selectionToken);
+    localStorage.setItem(this.ORG_CHOICES_KEY, JSON.stringify(orgs));
+    this.pendingOrgChoices.set(orgs);
+  }
+
+  getSelectionToken(): string | null {
+    return localStorage.getItem(this.SELECTION_KEY);
+  }
+
+  getStoredOrgChoices(): OrgChoice[] {
+    const raw = localStorage.getItem(this.ORG_CHOICES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }
+
+  clearSelectionState(): void {
+    localStorage.removeItem(this.SELECTION_KEY);
+    localStorage.removeItem(this.ORG_CHOICES_KEY);
+    this.pendingOrgChoices.set([]);
+  }
+
+  selectOrganization(selectionToken: string, organizationId: string): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/auth/select-org`, {
+      selectionToken,
+      organizationId
+    });
+  }
+
+  storeNoAccessUser(user: { email: string; name: string; pictureUrl?: string }): void {
+    localStorage.setItem('dp_no_access_user', JSON.stringify(user));
+  }
+
+  getNoAccessUser(): { email: string; name: string; pictureUrl?: string } | null {
+    const raw = localStorage.getItem('dp_no_access_user');
+    return raw ? JSON.parse(raw) : null;
+  }
+
+  clearNoAccessUser(): void {
+    localStorage.removeItem('dp_no_access_user');
+  }
+
+  contactSupport(data: {
+    name: string; email: string; phone: string;
+    organizationName?: string; message?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/auth/support-contact`, data);
+  }
+
   private clearSession(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
+    this.clearSelectionState();
     this.currentUser.set(null);
     this.isAuthenticated.set(false);
   }

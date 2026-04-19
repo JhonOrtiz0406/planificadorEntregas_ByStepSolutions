@@ -12,4 +12,5 @@ public class CreateOrganizationRequest {
     @Email
     @NotBlank
     private String adminEmail;
+    private String category;
 }

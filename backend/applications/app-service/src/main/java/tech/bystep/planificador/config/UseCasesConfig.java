@@ -14,8 +14,9 @@ public class UseCasesConfig {
     }
 
     @Bean
-    public UserUseCase userUseCase(UserGateway userGateway) {
-        return new UserUseCase(userGateway);
+    public UserUseCase userUseCase(UserGateway userGateway,
+                                   tech.bystep.planificador.model.gateways.UserOrgGateway userOrgGateway) {
+        return new UserUseCase(userGateway, userOrgGateway);
     }
 
     @Bean
@@ -30,7 +31,16 @@ public class UseCasesConfig {
     }
 
     @Bean
-    public OrganizationUseCase organizationUseCase(OrganizationGateway organizationGateway) {
-        return new OrganizationUseCase(organizationGateway);
+    public OrganizationUseCase organizationUseCase(OrganizationGateway organizationGateway,
+                                                   tech.bystep.planificador.model.gateways.UserGateway userGateway,
+                                                   tech.bystep.planificador.model.gateways.UserOrgGateway userOrgGateway,
+                                                   tech.bystep.planificador.model.gateways.EmailGateway emailGateway) {
+        return new OrganizationUseCase(organizationGateway, userGateway, userOrgGateway, emailGateway);
+    }
+
+    @Bean
+    public CategoryStatusUseCase categoryStatusUseCase(
+            tech.bystep.planificador.model.gateways.CategoryStatusGateway categoryStatusGateway) {
+        return new CategoryStatusUseCase(categoryStatusGateway);
     }
 }

@@ -21,6 +21,45 @@ import { Organization } from '../../../core/models/organization.model';
 import { User } from '../../../core/models/user.model';
 import { InactiveMemberDialogComponent } from './inactive-member-dialog.component';
 
+// --- Confirm Org Action Dialog ---
+@Component({
+  selector: 'app-confirm-org-dialog',
+  standalone: true,
+  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
+  template: `
+    <mat-dialog-content style="padding:24px 24px 8px;min-width:360px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <mat-icon [style.color]="data.iconColor || '#e53935'" style="font-size:32px;height:32px;width:32px">
+          {{ data.icon || 'warning' }}
+        </mat-icon>
+        <h3 style="margin:0;color:#1e1b4b;font-size:1.1rem;font-weight:700">{{ data.title }}</h3>
+      </div>
+      <p style="color:#4b5563;line-height:1.6;margin:0 0 12px">{{ data.message }}</p>
+      @if (data.warning) {
+        <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:12px 14px;margin-bottom:4px">
+          <p style="margin:0;font-size:.85rem;color:#92400e;line-height:1.5">
+            ⚠️ {{ data.warning }}
+          </p>
+        </div>
+      }
+    </mat-dialog-content>
+    <mat-dialog-actions align="end" style="padding:16px 24px;gap:8px">
+      <button mat-stroked-button (click)="close(false)">Cancelar</button>
+      <button mat-raised-button [color]="data.confirmColor || 'warn'" (click)="close(true)">
+        <mat-icon>{{ data.icon || 'check' }}</mat-icon> {{ data.confirmLabel }}
+      </button>
+    </mat-dialog-actions>
+  `
+})
+export class ConfirmOrgDialogComponent {
+  data: {
+    title: string; message: string; confirmLabel: string;
+    confirmColor?: string; icon?: string; iconColor?: string; warning?: string;
+  } = inject(MAT_DIALOG_DATA);
+  private ref = inject(MatDialogRef<ConfirmOrgDialogComponent>);
+  close(confirmed: boolean): void { this.ref.close(confirmed); }
+}
+
 // --- Delete Org Dialog ---
 @Component({
   selector: 'app-delete-org-dialog',
@@ -211,13 +250,41 @@ export class OrgDetailComponent implements OnInit {
   toggleOrgStatus(): void {
     const o = this.org();
     if (!o) return;
-    const action = o.active ? this.orgService.disable(o.id) : this.orgService.enable(o.id);
-    action.subscribe({
-      next: () => {
-        this.org.update(prev => prev ? { ...prev, active: !prev.active } : prev);
-        this.snackBar.open(o.active ? 'Organización deshabilitada' : 'Organización habilitada', 'Cerrar', { duration: 2000 });
-      },
-      error: (err) => this.snackBar.open(err.error?.message || 'Error', 'Cerrar', { duration: 3000 })
+    const isDisabling = o.active;
+
+    const dialogData = isDisabling
+      ? {
+          title: 'Inhabilitar organización',
+          message: `¿Seguro que deseas inhabilitar la organización "${o.name}"? Los accesos de todos los miembros serán revocados y se les notificará por correo.`,
+          confirmLabel: 'Inhabilitar',
+          confirmColor: 'warn',
+          icon: 'block',
+          iconColor: '#e53935',
+          warning: 'Podrás reactivar la organización en cualquier momento, pero los miembros deberán ser re-invitados.'
+        }
+      : {
+          title: 'Habilitar organización',
+          message: `¿Deseas reactivar la organización "${o.name}"? Se notificará al administrador por correo.`,
+          confirmLabel: 'Habilitar',
+          confirmColor: 'primary',
+          icon: 'check_circle',
+          iconColor: '#16a34a'
+        };
+
+    const ref = this.dialog.open(ConfirmOrgDialogComponent, { width: '460px', data: dialogData });
+    ref.afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      const action = isDisabling ? this.orgService.disable(o.id) : this.orgService.enable(o.id);
+      action.subscribe({
+        next: () => {
+          this.org.update(prev => prev ? { ...prev, active: !prev.active } : prev);
+          this.snackBar.open(
+            isDisabling ? 'Organización inhabilitada' : 'Organización habilitada',
+            'Cerrar', { duration: 2000 }
+          );
+        },
+        error: (err) => this.snackBar.open(err.error?.message || 'Error', 'Cerrar', { duration: 3000 })
+      });
     });
   }
 

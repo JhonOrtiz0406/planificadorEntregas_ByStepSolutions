@@ -20,6 +20,7 @@ public class Organization {
     private String logoUrl;
     private String iconName;
     private String adminEmail;
+    private String category;
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

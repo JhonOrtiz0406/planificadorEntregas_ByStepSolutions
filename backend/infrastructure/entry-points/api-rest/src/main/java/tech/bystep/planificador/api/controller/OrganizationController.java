@@ -51,6 +51,7 @@ public class OrganizationController {
                 .name(request.getName())
                 .logoUrl(request.getLogoUrl())
                 .adminEmail(request.getAdminEmail())
+                .category(request.getCategory() != null ? request.getCategory() : "GENERAL")
                 .build();
         Organization created = organizationUseCase.create(org);
         invitationUseCase.create(request.getAdminEmail(), tech.bystep.planificador.model.UserRole.ORG_ADMIN, created.getId(), created.getName());

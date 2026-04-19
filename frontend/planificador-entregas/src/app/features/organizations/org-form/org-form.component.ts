@@ -7,15 +7,17 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { OrganizationService } from '../../../core/services/organization.service';
+import { CategoryStatusService } from '../../../core/services/category-status.service';
 
 @Component({
   selector: 'app-org-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule,
-    MatInputModule, MatButtonModule, MatIconModule, MatSnackBarModule, MatProgressSpinnerModule],
+    MatInputModule, MatButtonModule, MatIconModule, MatSelectModule, MatSnackBarModule, MatProgressSpinnerModule],
   template: `
     <div style="max-width:600px;margin:0 auto">
       <mat-card>
@@ -30,6 +32,18 @@ import { OrganizationService } from '../../../core/services/organization.service
               <mat-icon matSuffix>business</mat-icon>
               @if (form.get('name')?.hasError('required')) {
                 <mat-error>El nombre es requerido</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Categoría *</mat-label>
+              <mat-select formControlName="category">
+                @for (cat of categoryEntries(); track cat.key) {
+                  <mat-option [value]="cat.key">{{ cat.label }}</mat-option>
+                }
+              </mat-select>
+              <mat-icon matSuffix>category</mat-icon>
+              @if (form.get('category')?.hasError('required')) {
+                <mat-error>La categoría es requerida</mat-error>
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
@@ -61,18 +75,28 @@ import { OrganizationService } from '../../../core/services/organization.service
     </div>
   `
 })
-export class OrgFormComponent {
+export class OrgFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private orgService = inject(OrganizationService);
+  private categoryService = inject(CategoryStatusService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
 
   loading = signal(false);
+  categoryEntries = signal<{ key: string; label: string }[]>([]);
+
   form = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(255)]],
+    category: ['GENERAL', [Validators.required]],
     logoUrl: [''],
     adminEmail: ['', [Validators.required, Validators.email]]
   });
+
+  ngOnInit(): void {
+    this.categoryService.getAllCategories().subscribe(cats => {
+      this.categoryEntries.set(Object.entries(cats).map(([key, label]) => ({ key, label })));
+    });
+  }
 
   onSubmit(): void {
     if (this.form.invalid) return;

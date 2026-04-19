@@ -84,7 +84,7 @@
               <mat-form-field appearance="outline" class="full-w">
                 <mat-label>Estado del pedido</mat-label>
                 <mat-select formControlName="progressStatus">
-                  @for (opt of progressOptions; track opt.value) {
+                  @for (opt of progressOptions(); track opt.value) {
                     <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
                   }
                 </mat-select>

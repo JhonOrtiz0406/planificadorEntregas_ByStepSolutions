@@ -31,7 +31,8 @@ public class JwtService {
                 "userId", user.getId().toString(),
                 "email", user.getEmail(),
                 "role", user.getRole().name(),
-                "organizationId", user.getOrganizationId() != null ? user.getOrganizationId().toString() : ""
+                "organizationId", user.getOrganizationId() != null ? user.getOrganizationId().toString() : "",
+                "selectionToken", false
         );
         return Jwts.builder()
                 .subject(user.getEmail())
@@ -40,6 +41,32 @@ public class JwtService {
                 .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    public String generateSelectionToken(User user) {
+        Map<String, Object> claims = Map.of(
+                "userId", user.getId().toString(),
+                "email", user.getEmail(),
+                "role", "ORG_SELECTION",
+                "organizationId", "",
+                "selectionToken", true
+        );
+        return Jwts.builder()
+                .subject(user.getEmail())
+                .claims(claims)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 300_000L))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public boolean isSelectionToken(String token) {
+        try {
+            Object val = validateAndExtract(token).get("selectionToken");
+            return Boolean.TRUE.equals(val);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public Claims validateAndExtract(String token) {
