@@ -26,6 +26,9 @@ public class ReminderEntity {
     @Column(name = "order_id", nullable = false)
     private UUID orderId;
 
+    @Column(name = "organization_id", nullable = false)
+    private UUID organizationId;
+
     @Column(name = "reminder_date", nullable = false)
     private LocalDate reminderDate;
 

@@ -5,7 +5,6 @@ import org.springframework.stereotype.Repository;
 import tech.bystep.planificador.jpa.entity.OrderEntity;
 import tech.bystep.planificador.jpa.repository.OrderJpaRepository;
 import tech.bystep.planificador.model.Order;
-import tech.bystep.planificador.model.ProgressStatus;
 import tech.bystep.planificador.model.gateways.OrderGateway;
 
 import java.time.LocalDate;
@@ -51,13 +50,9 @@ public class OrderAdapter implements OrderGateway {
     }
 
     @Override
-    public List<Order> findByDeliveryDateBetween(LocalDate start, LocalDate end) {
-        return repository.findByDeliveryDateBetween(start, end).stream().map(this::toModel).collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Order> findByProgressStatusNot(ProgressStatus status) {
-        return repository.findByProgressStatusNot(status).stream().map(this::toModel).collect(Collectors.toList());
+    public List<Order> findByOrganizationIdAndDeliveryDateBetween(UUID organizationId, LocalDate start, LocalDate end) {
+        return repository.findByOrganizationIdAndDeliveryDateBetween(organizationId, start, end)
+                .stream().map(this::toModel).collect(Collectors.toList());
     }
 
     @Override

@@ -12,6 +12,8 @@ import tech.bystep.planificador.api.dto.response.AuthResponse;
 import tech.bystep.planificador.api.dto.response.UserResponse;
 import tech.bystep.planificador.model.Invitation;
 import tech.bystep.planificador.model.User;
+
+import java.util.List;
 import tech.bystep.planificador.security.GoogleTokenVerifier;
 import tech.bystep.planificador.security.JwtService;
 import tech.bystep.planificador.usecase.InvitationUseCase;
@@ -58,12 +60,16 @@ public class AuthController {
         } else {
             user = userUseCase.findOrCreateFromGoogle(googleId, email, name, pictureUrl);
             if (user == null) {
-                // User not registered yet — check for a pending invitation by email
-                Invitation pending = invitationUseCase.findPendingByEmail(email).orElse(null);
-                if (pending == null) {
+                List<Invitation> pendingInvitations = invitationUseCase.findAllPendingByEmail(email);
+                if (pendingInvitations.isEmpty()) {
                     return ResponseEntity.status(403).body(ApiResponse.error(
                             "Access denied. You need an invitation to join the platform."));
                 }
+                if (pendingInvitations.size() > 1) {
+                    return ResponseEntity.status(409).body(ApiResponse.error(
+                            "Multiple pending invitations found. Use the specific invitation link from your email."));
+                }
+                Invitation pending = pendingInvitations.get(0);
                 invitationUseCase.accept(pending.getToken());
                 user = userUseCase.registerFromInvitation(googleId, email, name, pictureUrl,
                         pending.getRole(), pending.getOrganizationId());

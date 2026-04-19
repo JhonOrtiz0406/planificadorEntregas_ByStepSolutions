@@ -7,6 +7,7 @@ import tech.bystep.planificador.model.gateways.EmailGateway;
 import tech.bystep.planificador.model.gateways.InvitationGateway;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,8 +36,8 @@ public class InvitationUseCase {
         return invitationGateway.findByToken(token);
     }
 
-    public Optional<Invitation> findPendingByEmail(String email) {
-        return invitationGateway.findPendingByEmail(email);
+    public List<Invitation> findAllPendingByEmail(String email) {
+        return invitationGateway.findAllPendingByEmail(email);
     }
 
     public Invitation accept(String token) {

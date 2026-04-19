@@ -17,6 +17,7 @@ public class Reminder {
 
     private UUID id;
     private UUID orderId;
+    private UUID organizationId;
     private LocalDate reminderDate;
     private int daysBefore;
     private boolean sent;

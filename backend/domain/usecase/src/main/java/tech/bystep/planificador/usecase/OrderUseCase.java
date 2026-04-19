@@ -84,8 +84,8 @@ public class OrderUseCase {
         return orderGateway.findPendingDeliveries(organizationId);
     }
 
-    public List<Order> findByDateRange(LocalDate start, LocalDate end) {
-        return orderGateway.findByDeliveryDateBetween(start, end);
+    public List<Order> findByDateRange(UUID organizationId, LocalDate start, LocalDate end) {
+        return orderGateway.findByOrganizationIdAndDeliveryDateBetween(organizationId, start, end);
     }
 
     public void delete(UUID id, UUID organizationId) {
@@ -102,6 +102,7 @@ public class OrderUseCase {
             if (!reminderDate.isBefore(LocalDate.now())) {
                 reminders.add(Reminder.builder()
                         .orderId(order.getId())
+                        .organizationId(order.getOrganizationId())
                         .reminderDate(reminderDate)
                         .daysBefore(daysBefore)
                         .sent(false)
