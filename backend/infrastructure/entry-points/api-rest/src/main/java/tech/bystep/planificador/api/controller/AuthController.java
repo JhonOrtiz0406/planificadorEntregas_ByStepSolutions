@@ -71,18 +71,12 @@ public class AuthController {
             user = userUseCase.findOrCreateFromGoogle(googleId, email, name, pictureUrl);
             if (user == null) {
                 List<Invitation> pendingInvitations = invitationUseCase.findAllPendingByEmail(email);
-                if (pendingInvitations.isEmpty()) {
+                if (!pendingInvitations.isEmpty()) {
                     return ResponseEntity.status(403).body(ApiResponse.error(
-                            "Access denied. You need an invitation to join the platform."));
+                            "Tienes una invitación pendiente. Acepta la invitación desde el enlace en tu correo electrónico."));
                 }
-                if (pendingInvitations.size() > 1) {
-                    return ResponseEntity.status(409).body(ApiResponse.error(
-                            "Multiple pending invitations found. Use the specific invitation link from your email."));
-                }
-                Invitation pending = pendingInvitations.get(0);
-                invitationUseCase.accept(pending.getToken());
-                user = userUseCase.registerFromInvitation(googleId, email, name, pictureUrl,
-                        pending.getRole(), pending.getOrganizationId());
+                return ResponseEntity.status(403).body(ApiResponse.error(
+                        "Acceso denegado. Necesitas una invitación para acceder a la plataforma."));
             }
         }
 
