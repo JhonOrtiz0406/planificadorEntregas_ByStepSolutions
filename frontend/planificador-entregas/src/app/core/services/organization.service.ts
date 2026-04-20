@@ -58,4 +58,12 @@ export class OrganizationService {
   updateIcon(id: string, iconName: string): Observable<Organization> {
     return this.http.patch<any>(`${this.baseUrl}/${id}/icon`, { iconName }).pipe(map(r => r.data));
   }
+
+  uploadLogo(file: File): Observable<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<any>(`${environment.apiUrl}/files/upload/logo`, formData).pipe(
+      map(r => r.data['url'])
+    );
+  }
 }

@@ -161,6 +161,7 @@ export class OrgDetailComponent implements OnInit {
   loading = signal(true);
   loadError = signal(false);
   inviting = signal(false);
+  uploadingLogo = signal(false);
 
   inviteForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -247,6 +248,33 @@ export class OrgDetailComponent implements OnInit {
     });
   }
 
+  onLogoFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file || !this.org()) return;
+    this.uploadingLogo.set(true);
+    this.orgService.uploadLogo(file).subscribe({
+      next: (url) => {
+        this.orgService.update(this.org()!.id, { logoUrl: url }).subscribe({
+          next: (updated) => {
+            this.org.set(updated);
+            this.snackBar.open('Logo actualizado', 'Cerrar', { duration: 2000 });
+            this.uploadingLogo.set(false);
+          },
+          error: () => {
+            this.snackBar.open('Error al guardar el logo', 'Cerrar', { duration: 3000 });
+            this.uploadingLogo.set(false);
+          }
+        });
+      },
+      error: () => {
+        this.snackBar.open('Error al subir el logo', 'Cerrar', { duration: 3000 });
+        this.uploadingLogo.set(false);
+      }
+    });
+    input.value = '';
+  }
+
   toggleOrgStatus(): void {
     const o = this.org();
     if (!o) return;
@@ -315,6 +343,13 @@ export class OrgDetailComponent implements OnInit {
       'ORG_DELIVERY': 'Repartidor',
       'PLATFORM_ADMIN': 'Admin Plataforma'
     }[role] || role;
+  }
+
+  getOrgColor(name: string): string {
+    const colors = ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
   }
 
   canManageMember(member: User): boolean {

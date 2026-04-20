@@ -3,7 +3,11 @@
 
     <div class="sidenav-brand">
       <div class="brand-logo">
-        <mat-icon class="brand-icon">{{ brandIcon }}</mat-icon>
+        @if (brandLogoUrl) {
+          <img [src]="brandLogoUrl" alt="Logo" class="brand-logo-img">
+        } @else {
+          <mat-icon class="brand-icon">{{ brandIcon }}</mat-icon>
+        }
       </div>
       <div class="brand-text">
         <span class="brand-name">{{ displayName }}</span>
@@ -48,7 +52,11 @@
           <mat-icon>menu</mat-icon>
         </button>
         <div class="toolbar-brand">
-          <mat-icon class="toolbar-icon">{{ brandIcon }}</mat-icon>
+          @if (brandLogoUrl) {
+            <img [src]="brandLogoUrl" alt="Logo" class="toolbar-logo-img">
+          } @else {
+            <mat-icon class="toolbar-icon">{{ brandIcon }}</mat-icon>
+          }
           <span class="toolbar-title">{{ displayName }}</span>
         </div>
         <span class="toolbar-spacer"></span>

@@ -43,6 +43,10 @@ export class AppComponent implements OnInit {
     return user?.orgIconName || 'local_shipping';
   }
 
+  get brandLogoUrl(): string | null {
+    return this.authService.currentUser()?.orgLogoUrl ?? null;
+  }
+
   ngOnInit(): void {
     this.notificationService.notification$.subscribe(notification => {
       if (notification?.notification) {
