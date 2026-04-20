@@ -1,8 +1,9 @@
 package tech.bystep.planificador.firebase;
 
-import com.google.cloud.storage.Acl;
+import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
 import com.google.firebase.cloud.StorageClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +13,8 @@ import tech.bystep.planificador.model.gateways.StorageGateway;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -24,13 +26,24 @@ public class FirebaseStorageAdapter implements StorageGateway {
 
     @Override
     public String uploadFile(String fileName, String contentType, byte[] bytes) {
+        Storage storage = StorageClient.getInstance().bucket(storageBucket).getStorage();
+
+        String downloadToken = UUID.randomUUID().toString();
+
         BlobId blobId = BlobId.of(storageBucket, fileName);
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
                 .setContentType(contentType)
-                .setAcl(List.of(Acl.of(Acl.User.ofAllUsers(), Acl.Role.READER)))
+                .setCacheControl("public, max-age=31536000, immutable")
+                // Token embebido en metadata — hace el archivo accesible sin IAM público
+                .setMetadata(Map.of("firebaseStorageDownloadTokens", downloadToken))
                 .build();
-        StorageClient.getInstance().bucket(storageBucket).getStorage().create(blobInfo, bytes);
+
+        storage.create(blobInfo, bytes);
+
+        // Firebase Storage REST URL — acceso vía token, sin configuración IAM
         String encodedName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
-        return "https://storage.googleapis.com/" + storageBucket + "/" + encodedName;
+        return "https://firebasestorage.googleapis.com/v0/b/"
+                + storageBucket + "/o/" + encodedName
+                + "?alt=media&token=" + downloadToken;
     }
 }
