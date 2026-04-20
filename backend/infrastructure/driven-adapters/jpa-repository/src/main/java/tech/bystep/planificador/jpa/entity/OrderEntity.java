@@ -59,10 +59,10 @@ public class OrderEntity {
     @Column(name = "payment_status")
     private PaymentStatus paymentStatus;
 
-    @Column(name = "payment_amount", precision = 12, scale = 2)
+    @Column(name = "payment_amount", precision = 15, scale = 2)
     private BigDecimal paymentAmount;
 
-    @Column(name = "total_price", precision = 12, scale = 2)
+    @Column(name = "total_price", precision = 15, scale = 2)
     private BigDecimal totalPrice;
 
     @Column(name = "organization_id", nullable = false)

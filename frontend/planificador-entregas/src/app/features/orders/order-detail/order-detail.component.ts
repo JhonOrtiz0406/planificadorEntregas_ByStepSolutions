@@ -13,6 +13,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatRadioModule } from '@angular/material/radio';
 import { OrderService } from '../../../core/services/order.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { CategoryStatusService } from '../../../core/services/category-status.service';
@@ -25,7 +26,8 @@ import { ConfirmDeliveredDialogComponent } from './confirm-delivered-dialog.comp
   imports: [
     CommonModule, RouterLink, ReactiveFormsModule, MatCardModule, MatButtonModule, MatIconModule,
     MatChipsModule, MatSelectModule, MatFormFieldModule, MatInputModule,
-    MatSnackBarModule, MatProgressSpinnerModule, MatDividerModule, MatDialogModule
+    MatSnackBarModule, MatProgressSpinnerModule, MatDividerModule, MatDialogModule,
+    MatRadioModule
   ],
   templateUrl: './order-detail.component.html',
   styleUrl: './order-detail.component.css'
@@ -48,7 +50,8 @@ export class OrderDetailComponent implements OnInit {
   statusForm = this.fb.group({
     progressStatus: [''],
     paymentStatus: [''],
-    paymentAmount: [null as number | null]
+    paymentAmount: [null as number | null],
+    paymentAmountDisplay: ['']
   });
 
   readonly paymentOptions: { value: PaymentStatus; label: string }[] = [
@@ -67,10 +70,14 @@ export class OrderDetailComponent implements OnInit {
     this.orderService.getById(id).subscribe({
       next: (order) => {
         this.order.set(order);
+        const amountDisplay = order.paymentAmount != null
+          ? Number(order.paymentAmount).toLocaleString('es-CO')
+          : '';
         this.statusForm.patchValue({
           progressStatus: order.progressStatus,
           paymentStatus: order.paymentStatus,
-          paymentAmount: order.paymentAmount as any
+          paymentAmount: order.paymentAmount as any,
+          paymentAmountDisplay: amountDisplay
         });
         this.loading.set(false);
         this.watchPaymentStatus();
@@ -85,18 +92,29 @@ export class OrderDetailComponent implements OnInit {
   private watchPaymentStatus(): void {
     this.statusForm.get('paymentStatus')?.valueChanges.subscribe(val => {
       if (val === 'PAID') {
-        // Auto-set progress to IN_PREPARATION
-        this.statusForm.get('progressStatus')?.setValue('IN_PREPARATION', { emitEvent: false });
-        // Ask if already delivered
+        const previousProgress = this.statusForm.get('progressStatus')?.value ?? null;
         const ref = this.dialog.open(ConfirmDeliveredDialogComponent, { width: '400px' });
         ref.afterClosed().subscribe(delivered => {
           if (delivered === true) {
             this.statusForm.get('progressStatus')?.setValue('DELIVERED', { emitEvent: false });
+          } else {
+            // Restore the previous progress status — don't force IN_PREPARATION
+            this.statusForm.get('progressStatus')?.setValue(previousProgress, { emitEvent: false });
           }
-          // false or undefined → keep IN_PREPARATION
         });
       }
     });
+  }
+
+  onPaymentAmountInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let raw = input.value.replace(/[^0-9]/g, '');
+    if (raw.length > 13) raw = raw.slice(0, 13);
+    const formatted = raw ? Number(raw).toLocaleString('es-CO') : '';
+    const numeric = raw ? Number(raw) : null;
+    this.statusForm.get('paymentAmountDisplay')?.setValue(formatted, { emitEvent: false });
+    this.statusForm.get('paymentAmount')?.setValue(numeric, { emitEvent: false });
+    input.value = formatted;
   }
 
   updateStatus(): void {

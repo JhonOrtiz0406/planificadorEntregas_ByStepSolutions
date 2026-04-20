@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 :root {
@@ -27,20 +27,24 @@
 html, body {
   height: 100%;
   margin: 0;
-  font-family: 'Inter', 'Roboto', sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   background: var(--bg);
   color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Cards */
 mat-card {
   border-radius: var(--radius) !important;
   box-shadow: var(--shadow-sm) !important;
-  border: 1px solid rgba(79,70,229,0.06) !important;
+  border: 1px solid rgba(79,70,229,0.07) !important;
   transition: box-shadow 0.25s ease, transform 0.2s ease !important;
+  background: #ffffff !important;
 }
 mat-card:hover {
   box-shadow: var(--shadow) !important;
+  transform: translateY(-1px);
 }
 
 .mat-mdc-card-content { padding: 16px !important; }
@@ -154,3 +158,87 @@ mat-card .mat-mdc-form-field .mdc-notched-outline__trailing {
   font-size: 0.75rem;
   font-weight: 600;
 }
+
+/* ── Improved select dropdown ── */
+.mat-mdc-select-panel {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(79,70,229,0.16), 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+
+.mat-mdc-option {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+  font-size: 0.9rem !important;
+  border-radius: 6px !important;
+}
+
+.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+  background: #f0f0ff !important;
+  color: #4f46e5 !important;
+}
+
+/* ── Form field focus ring ── */
+.mat-mdc-form-field-appearance-outline.mat-focused .mdc-notched-outline__leading,
+.mat-mdc-form-field-appearance-outline.mat-focused .mdc-notched-outline__notch,
+.mat-mdc-form-field-appearance-outline.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--primary) !important;
+  border-width: 2px !important;
+}
+
+/* ── Snackbar styling ── */
+.snack-error .mdc-snackbar__surface {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.snack-success .mdc-snackbar__surface {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+}
+
+/* ── Radio buttons ── */
+.mat-mdc-radio-button .mdc-radio .mdc-radio__native-control:enabled:checked + .mdc-radio__background .mdc-radio__inner-circle {
+  border-color: var(--primary) !important;
+}
+
+.mat-mdc-radio-button .mdc-radio .mdc-radio__native-control:enabled + .mdc-radio__background .mdc-radio__outer-circle {
+  border-color: rgba(79,70,229,0.4) !important;
+}
+
+.mat-mdc-radio-button.mat-accent .mdc-radio--checked .mdc-radio__background::before {
+  background-color: var(--primary) !important;
+}
+
+/* ── Material icons alignment fix ── */
+mat-icon {
+  vertical-align: middle;
+}
+
+/* ── Chips refined ── */
+mat-chip {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.2px !important;
+  border-radius: 8px !important;
+}
+
+/* ── Datepicker calendar ── */
+.mat-datepicker-content {
+  border-radius: 16px !important;
+  box-shadow: 0 12px 40px rgba(79,70,229,0.18) !important;
+}
+
+.mat-calendar-body-selected {
+  background-color: var(--primary) !important;
+}
+
+.mat-calendar-body-cell:not(.mat-calendar-body-disabled):hover > .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) {
+  background-color: #f0f0ff !important;
+}
+
+/* ── Number inputs - remove spinners ── */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] { -moz-appearance: textfield; }

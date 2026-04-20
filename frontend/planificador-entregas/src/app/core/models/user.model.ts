@@ -9,6 +9,7 @@ export interface User {
   organizationId?: string;
   organizationName?: string;
   orgIconName?: string;
+  orgLogoUrl?: string;
   organizationCategory?: string;
 }
 

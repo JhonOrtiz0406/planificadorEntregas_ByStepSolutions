@@ -28,14 +28,18 @@
             <mat-label>Descripción del producto</mat-label>
             <textarea matInput formControlName="description" rows="3"
                       placeholder="Detalles del trabajo a realizar..."></textarea>
+            <mat-icon matSuffix>notes</mat-icon>
           </mat-form-field>
 
           <!-- Photo Upload -->
           <div class="photo-section">
-            <label class="photo-label">Foto del producto</label>
+            <label class="photo-label">
+              <mat-icon>photo_library</mat-icon>
+              Foto del producto
+            </label>
             <div class="photo-actions">
               <label class="upload-btn" for="fileInput">
-                <mat-icon>photo_library</mat-icon>
+                <mat-icon>collections</mat-icon>
                 Galería
                 <input id="fileInput" type="file" accept="image/*" (change)="onFileSelected($event)" hidden>
               </label>
@@ -47,11 +51,14 @@
               </label>
             </div>
             @if (uploadingPhoto()) {
-              <div class="upload-progress"><mat-spinner diameter="24"></mat-spinner> Subiendo foto...</div>
+              <div class="upload-progress">
+                <mat-spinner diameter="22"></mat-spinner>
+                Subiendo imagen...
+              </div>
             }
             @if (previewUrl()) {
               <div class="photo-preview">
-                <img [src]="previewUrl()" alt="Preview" class="preview-img">
+                <img [src]="previewUrl()" alt="Vista previa" class="preview-img">
               </div>
             }
           </div>
@@ -61,7 +68,7 @@
           <div class="two-cols">
             <mat-form-field appearance="outline">
               <mat-label>Nombre del cliente *</mat-label>
-              <input matInput formControlName="clientName">
+              <input matInput formControlName="clientName" placeholder="Nombre completo">
               <mat-icon matSuffix>person</mat-icon>
               @if (form.get('clientName')?.hasError('required')) {
                 <mat-error>El nombre del cliente es requerido</mat-error>
@@ -89,7 +96,8 @@
           <div class="two-cols">
             <mat-form-field appearance="outline">
               <mat-label>Fecha de entrega *</mat-label>
-              <input matInput [matDatepicker]="picker" formControlName="deliveryDate" [min]="minDate">
+              <input matInput [matDatepicker]="picker" formControlName="deliveryDate" [min]="minDate"
+                     placeholder="DD/MM/AAAA">
               <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
               <mat-datepicker #picker></mat-datepicker>
               @if (form.get('deliveryDate')?.hasError('required')) {
@@ -102,16 +110,20 @@
 
             <mat-form-field appearance="outline">
               <mat-label>Precio total</mat-label>
+              <span matPrefix style="color:#6b7280;padding-right:4px">$&nbsp;</span>
               <input matInput type="text" inputmode="numeric"
                      formControlName="totalPriceDisplay"
                      (input)="onPriceInput($event)"
                      placeholder="0">
-              <mat-icon matSuffix>attach_money</mat-icon>
+              <mat-icon matSuffix>payments</mat-icon>
+              <mat-hint>Formato: 1.500.000</mat-hint>
             </mat-form-field>
           </div>
 
           <div class="form-actions">
-            <button mat-button type="button" (click)="cancel()">Cancelar</button>
+            <button mat-stroked-button type="button" (click)="cancel()">
+              Cancelar
+            </button>
             <button mat-raised-button color="primary" type="submit"
                     [disabled]="form.invalid || loading()">
               @if (loading()) {

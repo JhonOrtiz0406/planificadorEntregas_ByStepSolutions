@@ -93,47 +93,6 @@ export class DeleteOrgDialogComponent {
   close(confirmed: boolean): void { this.ref.close(confirmed); }
 }
 
-// --- Icon Picker Dialog ---
-const ORG_ICONS = [
-  'business', 'diamond', 'local_florist', 'local_pharmacy', 'local_shipping',
-  'inventory_2', 'house', 'store', 'storefront', 'restaurant',
-  'cake', 'pets', 'sports_soccer', 'fitness_center', 'spa',
-  'medical_services', 'school', 'account_balance', 'work', 'factory'
-];
-
-@Component({
-  selector: 'app-icon-picker-dialog',
-  standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
-  template: `
-    <mat-dialog-content style="padding:24px;min-width:360px">
-      <h3 style="margin:0 0 16px;color:#1e1b4b">Seleccionar icono</h3>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
-        @for (icon of icons; track icon) {
-          <button mat-icon-button
-            [style.background]="selected === icon ? '#e0e7ff' : 'transparent'"
-            [style.border]="selected === icon ? '2px solid #6366f1' : '2px solid transparent'"
-            [style.border-radius]="'8px'"
-            (click)="selected = icon" [title]="icon">
-            <mat-icon>{{ icon }}</mat-icon>
-          </button>
-        }
-      </div>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end" style="padding:16px 24px;gap:8px">
-      <button mat-stroked-button (click)="close(null)">Cancelar</button>
-      <button mat-raised-button color="primary" [disabled]="!selected" (click)="close(selected)">
-        Confirmar
-      </button>
-    </mat-dialog-actions>
-  `
-})
-export class IconPickerDialogComponent {
-  private ref = inject(MatDialogRef<IconPickerDialogComponent>);
-  icons = ORG_ICONS;
-  selected = '';
-  close(icon: string | null): void { this.ref.close(icon); }
-}
 
 @Component({
   selector: 'app-org-detail',
@@ -161,6 +120,7 @@ export class OrgDetailComponent implements OnInit {
   loading = signal(true);
   loadError = signal(false);
   inviting = signal(false);
+  uploadingLogo = signal(false);
 
   inviteForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -232,19 +192,32 @@ export class OrgDetailComponent implements OnInit {
     });
   }
 
-  openIconPicker(): void {
-    const ref = this.dialog.open(IconPickerDialogComponent, { width: '380px' });
-    ref.afterClosed().subscribe(iconName => {
-      if (iconName) {
-        this.orgService.updateIcon(this.org()!.id, iconName).subscribe({
+
+  onLogoFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file || !this.org()) return;
+    this.uploadingLogo.set(true);
+    this.orgService.uploadLogo(file).subscribe({
+      next: (url) => {
+        this.orgService.update(this.org()!.id, { logoUrl: url }).subscribe({
           next: (updated) => {
             this.org.set(updated);
-            this.snackBar.open('Icono actualizado', 'Cerrar', { duration: 2000 });
+            this.snackBar.open('Logo actualizado', 'Cerrar', { duration: 2000 });
+            this.uploadingLogo.set(false);
           },
-          error: () => this.snackBar.open('Error al actualizar icono', 'Cerrar', { duration: 3000 })
+          error: () => {
+            this.snackBar.open('Error al guardar el logo', 'Cerrar', { duration: 3000 });
+            this.uploadingLogo.set(false);
+          }
         });
+      },
+      error: () => {
+        this.snackBar.open('Error al subir el logo', 'Cerrar', { duration: 3000 });
+        this.uploadingLogo.set(false);
       }
     });
+    input.value = '';
   }
 
   toggleOrgStatus(): void {
@@ -315,6 +288,13 @@ export class OrgDetailComponent implements OnInit {
       'ORG_DELIVERY': 'Repartidor',
       'PLATFORM_ADMIN': 'Admin Plataforma'
     }[role] || role;
+  }
+
+  getOrgColor(name: string): string {
+    const colors = ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
   }
 
   canManageMember(member: User): boolean {

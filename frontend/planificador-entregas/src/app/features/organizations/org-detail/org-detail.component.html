@@ -15,12 +15,17 @@
     <!-- Org Info -->
     <mat-card>
       <mat-card-header>
-        @if (o.iconName) {
+        @if (o.logoUrl) {
+          <img mat-card-avatar [src]="o.logoUrl" [alt]="o.name"
+               style="object-fit:cover;border-radius:50%">
+        } @else if (o.iconName) {
           <mat-icon mat-card-avatar style="font-size:40px;color:#6366f1">{{ o.iconName }}</mat-icon>
-        } @else if (o.logoUrl) {
-          <img mat-card-avatar [src]="o.logoUrl" [alt]="o.name">
         } @else {
-          <mat-icon mat-card-avatar style="font-size:40px">business</mat-icon>
+          <div mat-card-avatar [style.background]="getOrgColor(o.name)"
+               style="display:flex;align-items:center;justify-content:center;
+                      border-radius:50%;font-size:18px;font-weight:700;color:#fff">
+            {{ o.name.charAt(0).toUpperCase() }}
+          </div>
         }
         <mat-card-title>{{ o.name }}</mat-card-title>
         <mat-card-subtitle>{{ o.adminEmail }}</mat-card-subtitle>
@@ -31,9 +36,23 @@
             {{ o.active ? 'Activa' : 'Inactiva' }}
           </mat-chip>
 
-          @if (authService.isOrgAdmin()) {
-            <button mat-stroked-button (click)="openIconPicker()" style="font-size:.85rem">
-              <mat-icon>palette</mat-icon> Cambiar icono
+          @if (authService.isOrgAdmin() || authService.isPlatformAdmin()) {
+            <button mat-stroked-button (click)="logoInput.click()"
+                    [disabled]="uploadingLogo()" style="font-size:.85rem">
+              @if (uploadingLogo()) {
+                <mat-spinner diameter="16" style="display:inline-block;margin-right:6px"></mat-spinner>
+              } @else {
+                <mat-icon>add_photo_alternate</mat-icon>
+              }
+              {{ o.logoUrl ? 'Cambiar logo' : 'Subir logo' }}
+            </button>
+            <input #logoInput type="file" accept="image/*" style="display:none"
+                   (change)="onLogoFileSelected($event)">
+            <input #logoCameraInput type="file" accept="image/*" capture="environment" style="display:none"
+                   (change)="onLogoFileSelected($event)">
+            <button mat-icon-button (click)="logoCameraInput.click()" [disabled]="uploadingLogo()"
+                    title="Tomar foto del logo" style="font-size:.85rem">
+              <mat-icon>camera_alt</mat-icon>
             </button>
           }
 

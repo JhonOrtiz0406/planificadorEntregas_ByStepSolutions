@@ -32,9 +32,16 @@ import { Organization } from '../../../core/models/organization.model';
             <mat-card class="org-card" [routerLink]="['/organizations', org.id]">
               <mat-card-header>
                 @if (org.logoUrl) {
-                  <img mat-card-avatar [src]="org.logoUrl" [alt]="org.name">
+                  <img mat-card-avatar [src]="org.logoUrl" [alt]="org.name"
+                       style="object-fit:cover;border-radius:50%">
+                } @else if (org.iconName) {
+                  <mat-icon mat-card-avatar style="font-size:40px;color:#6366f1">{{ org.iconName }}</mat-icon>
                 } @else {
-                  <mat-icon mat-card-avatar style="font-size:40px">business</mat-icon>
+                  <div mat-card-avatar [style.background]="getOrgColor(org.name)"
+                       style="display:flex;align-items:center;justify-content:center;
+                              border-radius:50%;font-size:18px;font-weight:700;color:#fff">
+                    {{ org.name.charAt(0).toUpperCase() }}
+                  </div>
                 }
                 <mat-card-title>{{ org.name }}</mat-card-title>
                 <mat-card-subtitle>{{ org.adminEmail }}</mat-card-subtitle>
@@ -79,5 +86,12 @@ export class OrgListComponent implements OnInit {
       next: (orgs) => { this.orgs.set(orgs); this.loading.set(false); },
       error: () => this.loading.set(false)
     });
+  }
+
+  getOrgColor(name: string): string {
+    const colors = ['#6366f1','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
   }
 }

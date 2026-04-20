@@ -1,0 +1,328 @@
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 80px;
+}
+
+.detail-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.4s ease;
+  max-width: 1100px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ── */
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.detail-header button[mat-icon-button] {
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 10px !important;
+  transition: all 0.2s;
+}
+
+.detail-header button[mat-icon-button]:hover {
+  background: #f0f0ff;
+  box-shadow: 0 4px 14px rgba(79,70,229,0.2);
+  transform: translateX(-2px);
+}
+
+.header-info h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1e1b4b;
+  line-height: 1.2;
+}
+
+.header-info span {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.header-spacer { flex: 1; }
+
+/* ── Grid ── */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ── Producto card: imagen a la izquierda, info a la derecha ── */
+.product-card {
+  grid-column: 1 / -1;
+}
+
+.product-card-body {
+  display: flex !important;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 20px !important;
+}
+
+.product-photo-panel {
+  flex: 0 0 260px;
+  min-width: 0;
+}
+
+.product-photo {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 14px;
+  display: block;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.14);
+  border: 2px solid rgba(79,70,229,0.1);
+  cursor: zoom-in;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.product-photo:hover {
+  transform: scale(1.03);
+  box-shadow: 0 14px 40px rgba(79,70,229,0.2);
+}
+
+.product-info-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.card-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #4f46e5;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e7ff;
+}
+
+.card-section-title mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+/* ── Info cards (Cliente, Pago) ── */
+.info-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #4f46e5 !important;
+}
+
+.info-card mat-card-title mat-icon {
+  color: #4f46e5;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+/* ── Info rows ── */
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #a5b4fc;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.info-row a {
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.info-row a:hover {
+  text-decoration: underline;
+}
+
+.badge-overdue {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-left: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.days-info {
+  font-size: 0.82rem;
+  color: #9ca3af;
+  margin-left: 4px;
+}
+
+/* ── Balance due ── */
+.balance-due mat-icon {
+  color: #f59e0b !important;
+}
+
+.balance-due {
+  background: #fffbeb;
+  border-radius: 8px;
+  padding: 8px 10px !important;
+  margin-top: 4px;
+  border: 1px solid #fde68a;
+}
+
+/* ── Status update card ── */
+.status-card {
+  grid-column: 1 / -1;
+}
+
+.status-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #4f46e5 !important;
+}
+
+.status-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.status-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* ── Radio group blocks ── */
+.radio-group-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f7ff 0%, #f0f2ff 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(79,70,229,0.12);
+}
+
+.radio-group-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #4f46e5;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.radio-group-label mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.status-radio,
+.payment-radio {
+  font-size: 0.88rem !important;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.status-radio:hover,
+.payment-radio:hover {
+  background: rgba(79,70,229,0.06);
+}
+
+/* Color-coded payment radios */
+.pay-radio-unpaid .mdc-form-field label {
+  color: #991b1b;
+}
+.pay-radio-partial .mdc-form-field label {
+  color: #92400e;
+}
+.pay-radio-paid .mdc-form-field label {
+  color: #065f46;
+}
+
+.full-w { width: 100%; }
+
+.btn-spinner {
+  display: inline-block;
+  margin-right: 8px;
+}
+
+/* ── Back button (read-only) ── */
+.readonly-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .product-card-body {
+    flex-direction: column !important;
+  }
+  .product-photo-panel {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+  .product-photo {
+    height: 200px;
+  }
+  .status-two-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .detail-grid { grid-template-columns: 1fr; }
+  .readonly-actions { flex-direction: column; }
+  .readonly-actions button { width: 100%; }
+}

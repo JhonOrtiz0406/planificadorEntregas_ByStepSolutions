@@ -34,7 +34,7 @@ RUN npm ci --legacy-peer-deps
 
 COPY . .
 
-# Substitute placeholders in production environment file before building
+# Substitute placeholders in production environment file and service worker before building
 RUN sed -i \
       -e "s|\${API_URL}|${API_URL}|g" \
       -e "s|\${APP_NAME}|${APP_NAME}|g" \
@@ -46,7 +46,8 @@ RUN sed -i \
       -e "s|\${FIREBASE_MESSAGING_SENDER_ID}|${FIREBASE_MESSAGING_SENDER_ID}|g" \
       -e "s|\${FIREBASE_APP_ID}|${FIREBASE_APP_ID}|g" \
       -e "s|\${FIREBASE_VAPID_KEY}|${FIREBASE_VAPID_KEY}|g" \
-      src/environments/environment.prod.ts
+      src/environments/environment.prod.ts \
+      public/firebase-messaging-sw.js
 
 RUN npm run build:prod
 

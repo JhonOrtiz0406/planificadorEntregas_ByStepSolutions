@@ -63,9 +63,9 @@ export class OrderFormComponent implements OnInit {
 
   onPriceInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const raw = input.value.replace(/[^0-9]/g, '');
+    let raw = input.value.replace(/[^0-9]/g, '');
+    if (raw.length > 13) raw = raw.slice(0, 13);
     const formatted = raw ? Number(raw).toLocaleString('es-CO') : '';
-    // Update display without triggering another input event
     this.form.get('totalPriceDisplay')?.setValue(formatted, { emitEvent: false });
     input.value = formatted;
   }

@@ -22,27 +22,34 @@
     </div>
 
     <div class="detail-grid">
-      <!-- Order Info -->
-      <mat-card class="info-card">
-        <mat-card-header><mat-card-title><mat-icon>inventory_2</mat-icon> Producto</mat-card-title></mat-card-header>
-        <mat-card-content>
+
+      <!-- Producto: imagen + info separados en 2 columnas internas -->
+      <mat-card class="info-card product-card">
+        <mat-card-content class="product-card-body">
           @if (o.photoUrl) {
-            <img [src]="o.photoUrl" alt="Foto del producto" class="product-photo">
+            <div class="product-photo-panel">
+              <img [src]="o.photoUrl" alt="Foto del producto" class="product-photo">
+            </div>
           }
-          <div class="info-row"><mat-icon>diamond</mat-icon><span>{{ o.productName }}</span></div>
-          @if (o.description) {
-            <div class="info-row"><mat-icon>notes</mat-icon><span>{{ o.description }}</span></div>
-          }
-          <div class="info-row"><mat-icon>event</mat-icon>
-            <span>Entrega: <strong>{{ o.deliveryDate | date:'dd/MM/yyyy' }}</strong>
-              @if (o.overdue) { <span class="badge-overdue">VENCIDO</span> }
-              @else { <span class="days-info">({{ o.daysUntilDelivery }} días)</span> }
-            </span>
+          <div class="product-info-panel">
+            <div class="card-section-title">
+              <mat-icon>inventory_2</mat-icon> Producto
+            </div>
+            <div class="info-row"><mat-icon>diamond</mat-icon><span>{{ o.productName }}</span></div>
+            @if (o.description) {
+              <div class="info-row"><mat-icon>notes</mat-icon><span>{{ o.description }}</span></div>
+            }
+            <div class="info-row"><mat-icon>event</mat-icon>
+              <span>Entrega: <strong>{{ o.deliveryDate | date:'dd/MM/yyyy' }}</strong>
+                @if (o.overdue) { <span class="badge-overdue">VENCIDO</span> }
+                @else { <span class="days-info">({{ o.daysUntilDelivery }} días)</span> }
+              </span>
+            </div>
           </div>
         </mat-card-content>
       </mat-card>
 
-      <!-- Client Info -->
+      <!-- Cliente -->
       <mat-card class="info-card">
         <mat-card-header><mat-card-title><mat-icon>person</mat-icon> Cliente</mat-card-title></mat-card-header>
         <mat-card-content>
@@ -59,7 +66,7 @@
         </mat-card-content>
       </mat-card>
 
-      <!-- Payment Info -->
+      <!-- Pago -->
       <mat-card class="info-card">
         <mat-card-header><mat-card-title><mat-icon>payments</mat-icon> Pago</mat-card-title></mat-card-header>
         <mat-card-content>
@@ -75,42 +82,65 @@
         </mat-card-content>
       </mat-card>
 
-      <!-- Status Update (ORG_ADMIN only) -->
+      <!-- Actualizar Estado -->
       @if (authService.canUpdateStatus()) {
         <mat-card class="status-card">
           <mat-card-header><mat-card-title><mat-icon>update</mat-icon> Actualizar Estado</mat-card-title></mat-card-header>
           <mat-card-content>
             <form [formGroup]="statusForm" class="status-form">
-              <mat-form-field appearance="outline" class="full-w">
-                <mat-label>Estado del pedido</mat-label>
-                <mat-select formControlName="progressStatus">
-                  @for (opt of progressOptions(); track opt.value) {
-                    <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
 
-              <mat-form-field appearance="outline" class="full-w">
-                <mat-label>Estado de pago</mat-label>
-                <mat-select formControlName="paymentStatus">
-                  @for (opt of paymentOptions; track opt.value) {
-                    <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
+              <div class="status-two-cols">
+
+                <!-- Estado del pedido — radio buttons -->
+                <div class="radio-group-block">
+                  <div class="radio-group-label">
+                    <mat-icon>flag</mat-icon>
+                    Estado del pedido
+                  </div>
+                  <mat-radio-group formControlName="progressStatus" class="radio-list">
+                    @for (opt of progressOptions(); track opt.value) {
+                      <mat-radio-button [value]="opt.value" class="status-radio">
+                        {{ opt.label }}
+                      </mat-radio-button>
+                    }
+                  </mat-radio-group>
+                </div>
+
+                <!-- Estado de pago — radio buttons -->
+                <div class="radio-group-block">
+                  <div class="radio-group-label">
+                    <mat-icon>payments</mat-icon>
+                    Estado de pago
+                  </div>
+                  <mat-radio-group formControlName="paymentStatus" class="radio-list">
+                    @for (opt of paymentOptions; track opt.value) {
+                      <mat-radio-button [value]="opt.value" class="payment-radio"
+                                        [class]="'pay-radio-' + opt.value.toLowerCase()">
+                        {{ opt.label }}
+                      </mat-radio-button>
+                    }
+                  </mat-radio-group>
+                </div>
+
+              </div>
 
               @if (isPartialPayment) {
                 <mat-form-field appearance="outline" class="full-w">
                   <mat-label>Monto del abono</mat-label>
-                  <input matInput type="number" formControlName="paymentAmount" min="0">
-                  <mat-icon matSuffix>attach_money</mat-icon>
+                  <span matPrefix style="color:#6b7280;padding-right:4px">$&nbsp;</span>
+                  <input matInput type="text" inputmode="numeric"
+                         formControlName="paymentAmountDisplay"
+                         (input)="onPaymentAmountInput($event)"
+                         placeholder="0">
+                  <mat-icon matSuffix>payments</mat-icon>
+                  <mat-hint>Formato: 1.500.000</mat-hint>
                 </mat-form-field>
               }
 
               <button mat-raised-button color="primary" type="button"
                       (click)="updateStatus()" [disabled]="updating()">
                 @if (updating()) {
-                  <mat-spinner diameter="20" style="display:inline-block;margin-right:8px;"></mat-spinner>
+                  <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
                 }
                 Guardar Estado
               </button>
@@ -120,7 +150,7 @@
       }
     </div>
 
-    <!-- Back button for read-only roles (ORG_EMPLOYEE / ORG_DELIVERY) -->
+    <!-- Back button (read-only roles) -->
     @if (!authService.canUpdateStatus()) {
       <div class="readonly-actions">
         <button mat-raised-button routerLink="/orders">

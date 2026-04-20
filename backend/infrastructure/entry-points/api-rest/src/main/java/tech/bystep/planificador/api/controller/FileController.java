@@ -35,4 +35,18 @@ public class FileController {
         String url = storageGateway.uploadFile(fileName, file.getContentType(), file.getBytes());
         return ResponseEntity.ok(ApiResponse.ok(Map.of("url", url)));
     }
+
+    @PostMapping("/upload/logo")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','ORG_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, String>>> uploadLogo(
+            @RequestParam("file") MultipartFile file) throws IOException {
+        String ext = "";
+        String original = file.getOriginalFilename();
+        if (original != null && original.contains(".")) {
+            ext = original.substring(original.lastIndexOf("."));
+        }
+        String fileName = "logos/" + UUID.randomUUID() + ext;
+        String url = storageGateway.uploadFile(fileName, file.getContentType(), file.getBytes());
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("url", url)));
+    }
 }

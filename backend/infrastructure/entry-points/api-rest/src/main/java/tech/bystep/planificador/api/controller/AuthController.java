@@ -193,12 +193,14 @@ public class AuthController {
     private UserResponse toUserResponse(User user) {
         String orgName = null;
         String orgIconName = null;
+        String orgLogoUrl = null;
         String orgCategory = null;
         if (user.getOrganizationId() != null) {
             var org = organizationUseCase.findById(user.getOrganizationId()).orElse(null);
             if (org != null) {
                 orgName = org.getName();
                 orgIconName = org.getIconName();
+                orgLogoUrl = org.getLogoUrl();
                 orgCategory = org.getCategory();
             }
         }
@@ -208,6 +210,7 @@ public class AuthController {
                 .organizationId(user.getOrganizationId())
                 .organizationName(orgName)
                 .orgIconName(orgIconName)
+                .orgLogoUrl(orgLogoUrl)
                 .organizationCategory(orgCategory)
                 .build();
     }
