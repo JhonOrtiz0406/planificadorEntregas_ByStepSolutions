@@ -82,4 +82,4 @@ jobs:
     steps:
       - name: Deploy stack (backend + frontend)
         run: |
-          curl -f -X GET "${{ secrets.DOKPLOY_WEBHOOK_STACK }}"
+          curl -f --connect-timeout 30 --max-time 60 -X GET "${{ secrets.DOKPLOY_WEBHOOK_STACK }}"
