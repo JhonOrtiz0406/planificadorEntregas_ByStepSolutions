@@ -37,6 +37,45 @@
         <span>{{ filteredOrders().length }} resultado{{ filteredOrders().length !== 1 ? 's' : '' }}</span>
       </div>
     </div>
+
+    <!-- Sort by radio buttons -->
+    <div class="sort-bar">
+      <span class="sort-label">
+        <mat-icon>sort</mat-icon>
+        Ordenar por:
+      </span>
+      <div class="sort-groups">
+        <div class="sort-group">
+          <span class="sort-group-title">
+            <mat-icon>event</mat-icon>
+            Fecha Entrega
+          </span>
+          <mat-radio-group [(ngModel)]="dateSort" (change)="onDateSortChange()" class="sort-radios">
+            <mat-radio-button value="asc" class="sort-radio">
+              <span class="radio-label"><mat-icon>arrow_upward</mat-icon> Próxima</span>
+            </mat-radio-button>
+            <mat-radio-button value="desc" class="sort-radio">
+              <span class="radio-label"><mat-icon>arrow_downward</mat-icon> Lejana</span>
+            </mat-radio-button>
+          </mat-radio-group>
+        </div>
+        <div class="sort-divider"></div>
+        <div class="sort-group">
+          <span class="sort-group-title">
+            <mat-icon>attach_money</mat-icon>
+            Precio
+          </span>
+          <mat-radio-group [(ngModel)]="priceSort" (change)="onPriceSortChange()" class="sort-radios">
+            <mat-radio-button value="desc" class="sort-radio">
+              <span class="radio-label"><mat-icon>arrow_downward</mat-icon> Mayor</span>
+            </mat-radio-button>
+            <mat-radio-button value="asc" class="sort-radio">
+              <span class="radio-label"><mat-icon>arrow_upward</mat-icon> Menor</span>
+            </mat-radio-button>
+          </mat-radio-group>
+        </div>
+      </div>
+    </div>
   </mat-card>
 
   @if (loading()) {
@@ -61,6 +100,10 @@
               <div class="product-cell">
                 @if (o.photoUrl) {
                   <img [src]="o.photoUrl" [alt]="o.productName" class="product-thumb">
+                } @else {
+                  <div class="product-thumb-placeholder">
+                    <mat-icon>diamond</mat-icon>
+                  </div>
                 }
                 <span class="product-name">{{ o.productName }}</span>
               </div>
@@ -86,6 +129,17 @@
                 @if (o.overdue) { <span class="badge-overdue">Vencido</span> }
                 @else if (o.daysUntilDelivery <= 3) { <span class="badge-soon">{{ o.daysUntilDelivery }}d</span> }
               </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="totalPrice">
+            <th mat-header-cell *matHeaderCellDef>Precio</th>
+            <td mat-cell *matCellDef="let o">
+              @if (o.totalPrice) {
+                <span class="price-cell">{{ o.totalPrice | currency:'COP':'symbol':'1.0-0' }}</span>
+              } @else {
+                <span class="price-empty">—</span>
+              }
             </td>
           </ng-container>
 

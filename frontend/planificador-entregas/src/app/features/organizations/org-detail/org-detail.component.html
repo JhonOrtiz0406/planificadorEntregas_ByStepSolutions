@@ -37,9 +37,6 @@
           </mat-chip>
 
           @if (authService.isOrgAdmin() || authService.isPlatformAdmin()) {
-            <button mat-stroked-button (click)="openIconPicker()" style="font-size:.85rem">
-              <mat-icon>palette</mat-icon> Cambiar icono
-            </button>
             <button mat-stroked-button (click)="logoInput.click()"
                     [disabled]="uploadingLogo()" style="font-size:.85rem">
               @if (uploadingLogo()) {

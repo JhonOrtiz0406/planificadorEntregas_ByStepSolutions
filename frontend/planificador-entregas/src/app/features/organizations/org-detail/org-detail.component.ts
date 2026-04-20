@@ -93,47 +93,6 @@ export class DeleteOrgDialogComponent {
   close(confirmed: boolean): void { this.ref.close(confirmed); }
 }
 
-// --- Icon Picker Dialog ---
-const ORG_ICONS = [
-  'business', 'diamond', 'local_florist', 'local_pharmacy', 'local_shipping',
-  'inventory_2', 'house', 'store', 'storefront', 'restaurant',
-  'cake', 'pets', 'sports_soccer', 'fitness_center', 'spa',
-  'medical_services', 'school', 'account_balance', 'work', 'factory'
-];
-
-@Component({
-  selector: 'app-icon-picker-dialog',
-  standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
-  template: `
-    <mat-dialog-content style="padding:24px;min-width:360px">
-      <h3 style="margin:0 0 16px;color:#1e1b4b">Seleccionar icono</h3>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
-        @for (icon of icons; track icon) {
-          <button mat-icon-button
-            [style.background]="selected === icon ? '#e0e7ff' : 'transparent'"
-            [style.border]="selected === icon ? '2px solid #6366f1' : '2px solid transparent'"
-            [style.border-radius]="'8px'"
-            (click)="selected = icon" [title]="icon">
-            <mat-icon>{{ icon }}</mat-icon>
-          </button>
-        }
-      </div>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end" style="padding:16px 24px;gap:8px">
-      <button mat-stroked-button (click)="close(null)">Cancelar</button>
-      <button mat-raised-button color="primary" [disabled]="!selected" (click)="close(selected)">
-        Confirmar
-      </button>
-    </mat-dialog-actions>
-  `
-})
-export class IconPickerDialogComponent {
-  private ref = inject(MatDialogRef<IconPickerDialogComponent>);
-  icons = ORG_ICONS;
-  selected = '';
-  close(icon: string | null): void { this.ref.close(icon); }
-}
 
 @Component({
   selector: 'app-org-detail',
@@ -233,20 +192,6 @@ export class OrgDetailComponent implements OnInit {
     });
   }
 
-  openIconPicker(): void {
-    const ref = this.dialog.open(IconPickerDialogComponent, { width: '380px' });
-    ref.afterClosed().subscribe(iconName => {
-      if (iconName) {
-        this.orgService.updateIcon(this.org()!.id, iconName).subscribe({
-          next: (updated) => {
-            this.org.set(updated);
-            this.snackBar.open('Icono actualizado', 'Cerrar', { duration: 2000 });
-          },
-          error: () => this.snackBar.open('Error al actualizar icono', 'Cerrar', { duration: 3000 })
-        });
-      }
-    });
-  }
 
   onLogoFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
