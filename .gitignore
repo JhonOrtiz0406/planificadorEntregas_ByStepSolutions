@@ -92,3 +92,8 @@ docker-compose.override.yml
 logs/
 npm-debug.log*
 yarn-debug.log*
+/docker-compose.dev.yml
+/notasDespliegueLocal.md
+/scripts/start-all.ps1
+/scripts/start-backend.ps1
+/scripts/start-frontend.ps1
