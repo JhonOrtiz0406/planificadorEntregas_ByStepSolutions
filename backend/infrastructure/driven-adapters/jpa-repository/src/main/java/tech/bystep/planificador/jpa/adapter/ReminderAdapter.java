@@ -53,17 +53,17 @@ public class ReminderAdapter implements ReminderGateway {
 
     private Reminder toModel(ReminderEntity e) {
         return Reminder.builder()
-                .id(e.getId()).orderId(e.getOrderId()).reminderDate(e.getReminderDate())
-                .daysBefore(e.getDaysBefore()).sent(e.isSent()).sentAt(e.getSentAt())
-                .createdAt(e.getCreatedAt())
+                .id(e.getId()).orderId(e.getOrderId()).organizationId(e.getOrganizationId())
+                .reminderDate(e.getReminderDate()).daysBefore(e.getDaysBefore())
+                .sent(e.isSent()).sentAt(e.getSentAt()).createdAt(e.getCreatedAt())
                 .build();
     }
 
     private ReminderEntity toEntity(Reminder m) {
         return ReminderEntity.builder()
-                .id(m.getId()).orderId(m.getOrderId()).reminderDate(m.getReminderDate())
-                .daysBefore(m.getDaysBefore()).sent(m.isSent()).sentAt(m.getSentAt())
-                .createdAt(m.getCreatedAt())
+                .id(m.getId()).orderId(m.getOrderId()).organizationId(m.getOrganizationId())
+                .reminderDate(m.getReminderDate()).daysBefore(m.getDaysBefore())
+                .sent(m.isSent()).sentAt(m.getSentAt()).createdAt(m.getCreatedAt())
                 .build();
     }
 }

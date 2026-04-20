@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - 'feature/**'
+
+jobs:
+  # ────────────────────────────────────────────────
+  # Backend — build + test (all branches)
+  # ────────────────────────────────────────────────
+  backend:
+    name: Backend Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Make gradlew executable
+        working-directory: backend
+        run: chmod +x gradlew
+
+      - name: Build and test
+        working-directory: backend
+        run: ./gradlew build --no-daemon -x :app-service:bootJar
+
+      - name: Coverage report
+        working-directory: backend
+        run: ./gradlew jacocoMergedReport --no-daemon
+        continue-on-error: true
+
+  # ────────────────────────────────────────────────
+  # Frontend — build (all branches)
+  # ────────────────────────────────────────────────
+  frontend:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/planificador-entregas/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend/planificador-entregas
+        run: npm ci
+
+      - name: Build
+        working-directory: frontend/planificador-entregas
+        run: npm run build
+
+  # ────────────────────────────────────────────────
+  # Notify Dokploy — ONLY on push to main (trunk)
+  # Triggers redeploy on BOTH apps (backend + frontend)
+  # after all tests pass.
+  # Requires secrets: DOKPLOY_WEBHOOK_BACKEND, DOKPLOY_WEBHOOK_FRONTEND
+  # ────────────────────────────────────────────────
+  notify-deploy:
+    name: Trigger Dokploy Deploy
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Deploy backend
+        run: |
+          curl -f -X GET "${{ secrets.DOKPLOY_WEBHOOK_BACKEND }}"
+        continue-on-error: false
+
+      - name: Deploy frontend
+        run: |
+          curl -f -X GET "${{ secrets.DOKPLOY_WEBHOOK_FRONTEND }}"
+        continue-on-error: false

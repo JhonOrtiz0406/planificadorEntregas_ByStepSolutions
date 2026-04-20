@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -34,9 +35,9 @@ public class InvitationAdapter implements InvitationGateway {
     }
 
     @Override
-    public Optional<Invitation> findPendingByEmail(String email) {
-        List<InvitationEntity> results = repository.findPendingByEmail(email, LocalDateTime.now());
-        return results.isEmpty() ? Optional.empty() : Optional.of(toModel(results.get(0)));
+    public List<Invitation> findAllPendingByEmail(String email) {
+        return repository.findPendingByEmail(email, LocalDateTime.now())
+                .stream().map(this::toModel).collect(Collectors.toList());
     }
 
     @Override

@@ -51,9 +51,10 @@ public class OrganizationController {
                 .name(request.getName())
                 .logoUrl(request.getLogoUrl())
                 .adminEmail(request.getAdminEmail())
+                .category(request.getCategory() != null ? request.getCategory() : "GENERAL")
                 .build();
         Organization created = organizationUseCase.create(org);
-        invitationUseCase.create(request.getAdminEmail(), tech.bystep.planificador.model.UserRole.ORG_ADMIN, created.getId());
+        invitationUseCase.create(request.getAdminEmail(), tech.bystep.planificador.model.UserRole.ORG_ADMIN, created.getId(), created.getName());
         return ResponseEntity.status(201).body(ApiResponse.ok("Organization created and invitation sent", created));
     }
 
@@ -90,7 +91,9 @@ public class OrganizationController {
                         "Organization admin can only invite employees or delivery workers"));
             }
         }
-        Invitation invitation = invitationUseCase.create(request.getEmail(), request.getRole(), id);
+        Organization org = organizationUseCase.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Organization not found: " + id));
+        Invitation invitation = invitationUseCase.create(request.getEmail(), request.getRole(), id, org.getName());
         return ResponseEntity.ok(ApiResponse.ok("Invitation sent to " + request.getEmail(), invitation));
     }
 

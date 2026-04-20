@@ -52,8 +52,10 @@ public class OrderController {
     @PreAuthorize("hasAnyRole('ORG_ADMIN','ORG_EMPLOYEE','ORG_DELIVERY')")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> getCalendarOrders(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
-        List<OrderResponse> orders = orderUseCase.findByDateRange(start, end)
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        UUID orgId = UUID.fromString(principal.getOrganizationId());
+        List<OrderResponse> orders = orderUseCase.findByDateRange(orgId, start, end)
                 .stream().map(this::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.ok(orders));
     }
@@ -114,7 +116,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ORG_ADMIN','ORG_EMPLOYEE')")
+    @PreAuthorize("hasRole('ORG_ADMIN')")
     public ResponseEntity<ApiResponse<OrderResponse>> updateStatus(
             @PathVariable("id") UUID id,
             @RequestBody UpdateOrderStatusRequest request,

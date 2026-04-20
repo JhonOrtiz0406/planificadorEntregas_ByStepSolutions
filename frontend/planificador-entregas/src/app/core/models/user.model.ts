@@ -9,10 +9,23 @@ export interface User {
   organizationId?: string;
   organizationName?: string;
   orgIconName?: string;
+  organizationCategory?: string;
+}
+
+export interface OrgChoice {
+  id: string;
+  name: string;
+  category: string;
+  iconName: string;
+  userRole: string;
 }
 
 export interface AuthResponse {
   token: string;
   tokenType: string;
   user: User;
+  requiresOrgSelection?: boolean;
+  noOrgAccess?: boolean;
+  selectionToken?: string;
+  availableOrgs?: OrgChoice[];
 }

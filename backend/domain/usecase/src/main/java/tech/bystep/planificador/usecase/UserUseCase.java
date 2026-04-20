@@ -2,8 +2,10 @@ package tech.bystep.planificador.usecase;
 
 import lombok.RequiredArgsConstructor;
 import tech.bystep.planificador.model.User;
+import tech.bystep.planificador.model.UserOrganization;
 import tech.bystep.planificador.model.UserRole;
 import tech.bystep.planificador.model.gateways.UserGateway;
+import tech.bystep.planificador.model.gateways.UserOrgGateway;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,6 +16,7 @@ import java.util.UUID;
 public class UserUseCase {
 
     private final UserGateway userGateway;
+    private final UserOrgGateway userOrgGateway;
 
     public User findOrCreateFromGoogle(String googleId, String email, String name, String pictureUrl) {
         return userGateway.findByGoogleId(googleId)
@@ -29,17 +32,48 @@ public class UserUseCase {
 
     public User registerFromInvitation(String googleId, String email, String name, String pictureUrl,
                                        UserRole role, UUID organizationId) {
-        User user = User.builder()
-                .googleId(googleId)
-                .email(email)
-                .name(name)
-                .pictureUrl(pictureUrl)
-                .role(role)
-                .organizationId(organizationId)
-                .active(true)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+        User saved = userGateway.findByGoogleId(googleId)
+                .map(existing -> {
+                    existing.setOrganizationId(organizationId);
+                    existing.setRole(role);
+                    existing.setPictureUrl(pictureUrl);
+                    existing.setActive(true);
+                    existing.setUpdatedAt(LocalDateTime.now());
+                    return userGateway.save(existing);
+                })
+                .orElseGet(() -> {
+                    User user = User.builder()
+                            .googleId(googleId)
+                            .email(email)
+                            .name(name)
+                            .pictureUrl(pictureUrl)
+                            .role(role)
+                            .organizationId(organizationId)
+                            .active(true)
+                            .createdAt(LocalDateTime.now())
+                            .updatedAt(LocalDateTime.now())
+                            .build();
+                    return userGateway.save(user);
+                });
+        userOrgGateway.save(saved.getId(), organizationId, role.name());
+        return saved;
+    }
+
+    public List<UserOrganization> findUserOrganizations(UUID userId) {
+        return userOrgGateway.findByUserId(userId);
+    }
+
+    public User switchOrganization(UUID userId, UUID organizationId) {
+        User user = userGateway.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        List<UserOrganization> orgs = userOrgGateway.findByUserId(userId);
+        UserOrganization target = orgs.stream()
+                .filter(o -> o.getOrganizationId().equals(organizationId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("User does not belong to organization: " + organizationId));
+        user.setOrganizationId(organizationId);
+        user.setRole(UserRole.valueOf(target.getRole()));
+        user.setUpdatedAt(LocalDateTime.now());
         return userGateway.save(user);
     }
 

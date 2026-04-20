@@ -38,6 +38,9 @@ public class OrganizationEntity {
     @Column(name = "admin_email", nullable = false)
     private String adminEmail;
 
+    @Column(name = "category", nullable = false)
+    private String category;
+
     @Column(name = "is_active")
     private boolean active;
 

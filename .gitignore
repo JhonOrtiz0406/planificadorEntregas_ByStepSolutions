@@ -84,6 +84,7 @@ google-services.json
 # ===================================
 .dockerignore
 docker-compose.override.yml
+/docker-compose.dev.yml
 
 # ===================================
 # Logs
@@ -92,3 +93,7 @@ docker-compose.override.yml
 logs/
 npm-debug.log*
 yarn-debug.log*
+/notasDespliegueLocal.md
+/scripts/start-all.ps1
+/scripts/start-backend.ps1
+/scripts/start-frontend.ps1

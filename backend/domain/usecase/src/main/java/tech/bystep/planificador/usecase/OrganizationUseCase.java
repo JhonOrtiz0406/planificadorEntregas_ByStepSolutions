@@ -2,7 +2,12 @@ package tech.bystep.planificador.usecase;
 
 import lombok.RequiredArgsConstructor;
 import tech.bystep.planificador.model.Organization;
+import tech.bystep.planificador.model.User;
+import tech.bystep.planificador.model.UserRole;
+import tech.bystep.planificador.model.gateways.EmailGateway;
 import tech.bystep.planificador.model.gateways.OrganizationGateway;
+import tech.bystep.planificador.model.gateways.UserGateway;
+import tech.bystep.planificador.model.gateways.UserOrgGateway;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,6 +18,9 @@ import java.util.UUID;
 public class OrganizationUseCase {
 
     private final OrganizationGateway organizationGateway;
+    private final UserGateway userGateway;
+    private final UserOrgGateway userOrgGateway;
+    private final EmailGateway emailGateway;
 
     public Organization create(Organization organization) {
         String slug = generateSlug(organization.getName());
@@ -54,6 +62,7 @@ public class OrganizationUseCase {
         org.setActive(false);
         org.setUpdatedAt(LocalDateTime.now());
         organizationGateway.save(org);
+        revokeOrgAccess(id, org.getName(), false);
     }
 
     public void activate(UUID id) {
@@ -62,6 +71,17 @@ public class OrganizationUseCase {
         org.setActive(true);
         org.setUpdatedAt(LocalDateTime.now());
         organizationGateway.save(org);
+        // Re-activate all members that still belong to this org
+        List<User> members = userGateway.findByOrganizationId(id);
+        for (User member : members) {
+            member.setActive(true);
+            member.setUpdatedAt(LocalDateTime.now());
+            userGateway.save(member);
+        }
+        if (org.getAdminEmail() != null && !org.getAdminEmail().isBlank()) {
+            try { emailGateway.sendOrgReactivated(org.getAdminEmail(), org.getName()); }
+            catch (Exception ignored) {}
+        }
     }
 
     public void delete(UUID id) {
@@ -70,7 +90,39 @@ public class OrganizationUseCase {
         if (org.isActive()) {
             throw new IllegalStateException("Organization must be disabled before deletion");
         }
+        revokeOrgAccess(id, org.getName(), true);
         organizationGateway.deleteById(id);
+    }
+
+    private void revokeOrgAccess(UUID orgId, String orgName, boolean deleted) {
+        List<User> members = userGateway.findByOrganizationId(orgId);
+        String adminEmail = members.stream()
+                .filter(u -> u.getRole() == UserRole.ORG_ADMIN)
+                .map(User::getEmail)
+                .findFirst()
+                .orElse(null);
+
+        for (User member : members) {
+            boolean isAdmin = member.getRole() == UserRole.ORG_ADMIN;
+            try {
+                if (isAdmin) {
+                    emailGateway.sendOrgClosedToAdmin(member.getEmail(), orgName, deleted);
+                } else {
+                    emailGateway.sendOrgClosedToMember(member.getEmail(), orgName, adminEmail, deleted);
+                }
+            } catch (Exception ignored) {}
+
+            member.setActive(false);
+            if (deleted) {
+                member.setOrganizationId(null);
+            }
+            member.setUpdatedAt(LocalDateTime.now());
+            userGateway.save(member);
+        }
+
+        if (deleted) {
+            userOrgGateway.deleteByOrganizationId(orgId);
+        }
     }
 
     public Organization updateIcon(UUID id, String iconName) {

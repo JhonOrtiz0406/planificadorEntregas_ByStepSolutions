@@ -21,4 +21,5 @@ public class UserResponse {
     private UUID organizationId;
     private String organizationName;
     private String orgIconName;
+    private String organizationCategory;
 }

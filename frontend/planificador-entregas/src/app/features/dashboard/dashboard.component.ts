@@ -16,6 +16,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
 import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
+import { CategoryStatusService } from '../../core/services/category-status.service';
 import { Order } from '../../core/models/order.model';
 
 @Component({
@@ -31,12 +32,14 @@ import { Order } from '../../core/models/order.model';
 })
 export class DashboardComponent implements OnInit {
   private orderService = inject(OrderService);
+  private categoryStatusService = inject(CategoryStatusService);
   authService = inject(AuthService);
   private router = inject(Router);
 
   loading = signal(true);
   pendingOrders = signal<Order[]>([]);
   calendarEvents = signal<any[]>([]);
+  statusLabels = signal<Record<string, string>>({});
 
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, listPlugin, interactionPlugin],
@@ -56,6 +59,12 @@ export class DashboardComponent implements OnInit {
   };
 
   ngOnInit(): void {
+    const category = this.authService.currentUser()?.organizationCategory ?? 'GENERAL';
+    this.categoryStatusService.getByCategory(category).subscribe(statuses => {
+      const map: Record<string, string> = {};
+      statuses.forEach(s => map[s.statusKey] = s.label);
+      this.statusLabels.set(map);
+    });
     this.loadOrders();
   }
 
@@ -99,12 +108,7 @@ export class DashboardComponent implements OnInit {
   }
 
   getStatusLabel(status: string): string {
-    const labels: Record<string, string> = {
-      'NOT_STARTED': 'Sin iniciar',
-      'IN_PREPARATION': 'En preparación',
-      'DELIVERED': 'Entregado'
-    };
-    return labels[status] || status;
+    return this.statusLabels()[status] ?? status;
   }
 
   getPaymentLabel(status: string): string {

@@ -4,6 +4,10 @@ import { authGuard, roleGuard } from './core/guards/auth.guard';
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   {
+    path: 'select-org',
+    loadComponent: () => import('./features/auth/org-selection/org-selection.component').then(m => m.OrgSelectionComponent)
+  },
+  {
     path: 'auth',
     children: [
       {
@@ -13,6 +17,10 @@ export const routes: Routes = [
       {
         path: 'invite/:token',
         loadComponent: () => import('./features/auth/invite-accept/invite-accept.component').then(m => m.InviteAcceptComponent)
+      },
+      {
+        path: 'no-access',
+        loadComponent: () => import('./features/auth/no-access/no-access.component').then(m => m.NoAccessComponent)
       }
     ]
   },
@@ -31,7 +39,7 @@ export const routes: Routes = [
       },
       {
         path: 'new',
-        canActivate: [roleGuard('ORG_ADMIN')],
+        canActivate: [roleGuard('ORG_ADMIN', 'ORG_EMPLOYEE')],
         loadComponent: () => import('./features/orders/order-form/order-form.component').then(m => m.OrderFormComponent)
       },
       {

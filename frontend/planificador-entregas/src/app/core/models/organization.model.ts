@@ -5,6 +5,7 @@ export interface Organization {
   logoUrl?: string;
   iconName?: string;
   adminEmail: string;
+  category: string;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -14,6 +15,7 @@ export interface CreateOrganizationRequest {
   name: string;
   logoUrl?: string;
   adminEmail: string;
+  category: string;
 }
 
 export interface InviteMemberRequest {

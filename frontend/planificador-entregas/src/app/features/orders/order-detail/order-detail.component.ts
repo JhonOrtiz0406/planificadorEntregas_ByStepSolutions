@@ -15,6 +15,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { OrderService } from '../../../core/services/order.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { CategoryStatusService } from '../../../core/services/category-status.service';
 import { Order, ProgressStatus, PaymentStatus } from '../../../core/models/order.model';
 import { ConfirmDeliveredDialogComponent } from './confirm-delivered-dialog.component';
 
@@ -33,6 +34,7 @@ export class OrderDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private orderService = inject(OrderService);
+  private categoryStatusService = inject(CategoryStatusService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
   private fb = inject(FormBuilder);
@@ -41,18 +43,13 @@ export class OrderDetailComponent implements OnInit {
   order = signal<Order | null>(null);
   loading = signal(true);
   updating = signal(false);
+  progressOptions = signal<{ value: string; label: string }[]>([]);
 
   statusForm = this.fb.group({
     progressStatus: [''],
     paymentStatus: [''],
     paymentAmount: [null as number | null]
   });
-
-  readonly progressOptions: { value: ProgressStatus; label: string }[] = [
-    { value: 'NOT_STARTED', label: 'Sin iniciar' },
-    { value: 'IN_PREPARATION', label: 'En preparación' },
-    { value: 'DELIVERED', label: 'Entregado' }
-  ];
 
   readonly paymentOptions: { value: PaymentStatus; label: string }[] = [
     { value: 'UNPAID', label: 'No pagado' },
@@ -61,6 +58,11 @@ export class OrderDetailComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    const category = this.authService.currentUser()?.organizationCategory ?? 'GENERAL';
+    this.categoryStatusService.getByCategory(category).subscribe(statuses => {
+      this.progressOptions.set(statuses.map(s => ({ value: s.statusKey, label: s.label })));
+    });
+
     const id = this.route.snapshot.paramMap.get('id')!;
     this.orderService.getById(id).subscribe({
       next: (order) => {
@@ -154,7 +156,7 @@ export class OrderDetailComponent implements OnInit {
   }
 
   getProgressLabel(s: string): string {
-    return { 'NOT_STARTED': 'Sin iniciar', 'IN_PREPARATION': 'En preparación', 'DELIVERED': 'Entregado' }[s] || s;
+    return this.progressOptions().find(o => o.value === s)?.label ?? s;
   }
 
   getPaymentLabel(s: string): string {

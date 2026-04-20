@@ -1,4 +1,4 @@
-export type ProgressStatus = 'NOT_STARTED' | 'IN_PREPARATION' | 'DELIVERED';
+export type ProgressStatus = string;
 export type PaymentStatus = 'UNPAID' | 'PARTIAL' | 'PAID';
 
 export interface Order {

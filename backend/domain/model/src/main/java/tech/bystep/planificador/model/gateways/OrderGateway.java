@@ -1,7 +1,6 @@
 package tech.bystep.planificador.model.gateways;
 
 import tech.bystep.planificador.model.Order;
-import tech.bystep.planificador.model.ProgressStatus;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,9 +21,7 @@ public interface OrderGateway {
 
     List<Order> findPendingDeliveries(UUID organizationId);
 
-    List<Order> findByDeliveryDateBetween(LocalDate start, LocalDate end);
-
-    List<Order> findByProgressStatusNot(ProgressStatus status);
+    List<Order> findByOrganizationIdAndDeliveryDateBetween(UUID organizationId, LocalDate start, LocalDate end);
 
     void deleteById(UUID id);
 

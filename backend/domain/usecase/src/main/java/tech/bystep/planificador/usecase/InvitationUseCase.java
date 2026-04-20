@@ -7,6 +7,7 @@ import tech.bystep.planificador.model.gateways.EmailGateway;
 import tech.bystep.planificador.model.gateways.InvitationGateway;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,7 +17,7 @@ public class InvitationUseCase {
     private final InvitationGateway invitationGateway;
     private final EmailGateway emailGateway;
 
-    public Invitation create(String email, UserRole role, UUID organizationId) {
+    public Invitation create(String email, UserRole role, UUID organizationId, String organizationName) {
         Invitation invitation = Invitation.builder()
                 .email(email)
                 .role(role)
@@ -27,7 +28,7 @@ public class InvitationUseCase {
                 .createdAt(LocalDateTime.now())
                 .build();
         Invitation saved = invitationGateway.save(invitation);
-        emailGateway.sendInvitation(email, saved.getToken());
+        emailGateway.sendInvitation(email, saved.getToken(), organizationName);
         return saved;
     }
 
@@ -35,8 +36,8 @@ public class InvitationUseCase {
         return invitationGateway.findByToken(token);
     }
 
-    public Optional<Invitation> findPendingByEmail(String email) {
-        return invitationGateway.findPendingByEmail(email);
+    public List<Invitation> findAllPendingByEmail(String email) {
+        return invitationGateway.findAllPendingByEmail(email);
     }
 
     public Invitation accept(String token) {

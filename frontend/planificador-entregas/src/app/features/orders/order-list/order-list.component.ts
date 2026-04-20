@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { OrderService } from '../../../core/services/order.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { CategoryStatusService } from '../../../core/services/category-status.service';
 import { Order } from '../../../core/models/order.model';
 
 @Component({
@@ -28,11 +29,13 @@ import { Order } from '../../../core/models/order.model';
 })
 export class OrderListComponent implements OnInit {
   private orderService = inject(OrderService);
+  private categoryStatusService = inject(CategoryStatusService);
   authService = inject(AuthService);
   private router = inject(Router);
 
   orders = signal<Order[]>([]);
   filteredOrders = signal<Order[]>([]);
+  statusOptions = signal<{ value: string; label: string }[]>([]);
   loading = signal(true);
   searchText = '';
   filterStatus = '';
@@ -40,6 +43,10 @@ export class OrderListComponent implements OnInit {
   displayedColumns = ['orderNumber', 'productName', 'clientName', 'deliveryDate', 'progressStatus', 'paymentStatus', 'actions'];
 
   ngOnInit(): void {
+    const category = this.authService.currentUser()?.organizationCategory ?? 'GENERAL';
+    this.categoryStatusService.getByCategory(category).subscribe(statuses => {
+      this.statusOptions.set(statuses.map(s => ({ value: s.statusKey, label: s.label })));
+    });
     this.loadOrders();
   }
 
@@ -72,7 +79,7 @@ export class OrderListComponent implements OnInit {
   }
 
   getStatusLabel(s: string): string {
-    return { 'NOT_STARTED': 'Sin iniciar', 'IN_PREPARATION': 'En preparación', 'DELIVERED': 'Entregado' }[s] || s;
+    return this.statusOptions().find(o => o.value === s)?.label ?? s;
   }
 
   getPaymentLabel(s: string): string {

@@ -2,6 +2,7 @@ package tech.bystep.planificador.model.gateways;
 
 import tech.bystep.planificador.model.Invitation;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,7 +14,7 @@ public interface InvitationGateway {
 
     Optional<Invitation> findByEmailAndOrganizationId(String email, UUID organizationId);
 
-    Optional<Invitation> findPendingByEmail(String email);
+    List<Invitation> findAllPendingByEmail(String email);
 
     void deleteById(UUID id);
 }
