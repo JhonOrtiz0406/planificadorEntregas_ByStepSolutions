@@ -68,9 +68,10 @@ jobs:
 
   # ────────────────────────────────────────────────
   # Notify Dokploy — ONLY on push to main (trunk)
-  # Triggers redeploy on BOTH apps (backend + frontend)
-  # after all tests pass.
-  # Requires secrets: DOKPLOY_WEBHOOK_BACKEND, DOKPLOY_WEBHOOK_FRONTEND
+  # Triggers full stack redeploy (backend + frontend)
+  # after all checks pass.
+  # Requires secret: DOKPLOY_WEBHOOK_STACK
+  # Get URL from: Dokploy → Stack → Deployments → Webhook URL
   # ────────────────────────────────────────────────
   notify-deploy:
     name: Trigger Dokploy Deploy
@@ -79,12 +80,6 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: Deploy backend
+      - name: Deploy stack (backend + frontend)
         run: |
-          curl -f -X GET "${{ secrets.DOKPLOY_WEBHOOK_BACKEND }}"
-        continue-on-error: false
-
-      - name: Deploy frontend
-        run: |
-          curl -f -X GET "${{ secrets.DOKPLOY_WEBHOOK_FRONTEND }}"
-        continue-on-error: false
+          curl -f -X GET "${{ secrets.DOKPLOY_WEBHOOK_STACK }}"
