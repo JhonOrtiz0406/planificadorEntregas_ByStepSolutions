@@ -1,5 +1,7 @@
 package tech.bystep.planificador.model.gateways;
 
+import java.util.List;
+
 public interface WhatsAppGateway {
-    void sendMessage(String phoneNumber, String message);
+    void sendTemplate(String phoneNumber, String templateName, List<String> parameters);
 }
