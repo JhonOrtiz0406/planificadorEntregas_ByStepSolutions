@@ -22,9 +22,11 @@ project(':usecase').projectDir = file('./domain/usecase')
 include ':jpa-repository'
 include ':firebase-notification'
 include ':email-sender'
+include ':whatsapp-sender'
 project(':jpa-repository').projectDir = file('./infrastructure/driven-adapters/jpa-repository')
 project(':firebase-notification').projectDir = file('./infrastructure/driven-adapters/firebase-notification')
 project(':email-sender').projectDir = file('./infrastructure/driven-adapters/email-sender')
+project(':whatsapp-sender').projectDir = file('./infrastructure/driven-adapters/whatsapp-sender')
 
 // Infrastructure - Entry Points
 include ':api-rest'

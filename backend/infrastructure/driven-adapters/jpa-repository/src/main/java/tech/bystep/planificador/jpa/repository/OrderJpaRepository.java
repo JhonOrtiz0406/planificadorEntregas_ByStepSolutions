@@ -23,4 +23,7 @@ public interface OrderJpaRepository extends JpaRepository<OrderEntity, UUID> {
 
     @Query("SELECT COUNT(o) FROM OrderEntity o WHERE o.organizationId = :orgId")
     long countByOrganizationId(@Param("orgId") UUID orgId);
+
+    @Query("SELECT o FROM OrderEntity o WHERE o.deliveryDate < :date AND o.progressStatus != 'DELIVERED'")
+    List<OrderEntity> findOverdueOrders(@Param("date") LocalDate date);
 }

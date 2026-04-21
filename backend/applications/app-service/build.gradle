@@ -8,6 +8,7 @@ dependencies {
     implementation project(':jpa-repository')
     implementation project(':firebase-notification')
     implementation project(':email-sender')
+    implementation project(':whatsapp-sender')
     implementation project(':api-rest')
     implementation project(':security-config')
 

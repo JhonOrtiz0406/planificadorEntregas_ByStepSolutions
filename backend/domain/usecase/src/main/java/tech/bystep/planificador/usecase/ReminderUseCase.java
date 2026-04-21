@@ -12,6 +12,7 @@ import tech.bystep.planificador.model.gateways.ReminderGateway;
 import tech.bystep.planificador.model.gateways.UserGateway;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -20,6 +21,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReminderUseCase {
 
+    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("d/MM/yyyy");
+
     private final ReminderGateway reminderGateway;
     private final OrderGateway orderGateway;
     private final UserGateway userGateway;
@@ -27,8 +30,9 @@ public class ReminderUseCase {
 
     public void processDailyReminders() {
         LocalDate today = LocalDate.now();
-        List<Reminder> pendingReminders = reminderGateway.findPendingByDate(today);
 
+        // Upcoming delivery reminders (5, 3, 1, 0 days) → ORG_ADMIN + ORG_EMPLOYEE
+        List<Reminder> pendingReminders = reminderGateway.findPendingByDate(today);
         for (Reminder reminder : pendingReminders) {
             orderGateway.findById(reminder.getOrderId()).ifPresent(order -> {
                 if (order.getProgressStatus() != ProgressStatus.DELIVERED) {
@@ -37,10 +41,16 @@ public class ReminderUseCase {
                 }
             });
         }
+
+        // Overdue orders → ORG_ADMIN + ORG_EMPLOYEE
+        List<Order> overdueOrders = orderGateway.findOverdueOrders(today);
+        for (Order order : overdueOrders) {
+            sendOverdueAlert(order);
+        }
     }
 
     private void sendDeliveryReminder(Order order, Reminder reminder) {
-        String title = buildTitle(reminder.getDaysBefore());
+        String title = buildUpcomingTitle(reminder.getDaysBefore());
         String body = String.format("Pedido #%s - %s para %s",
                 order.getOrderNumber(), order.getProductName(), order.getClientName());
 
@@ -51,13 +61,31 @@ public class ReminderUseCase {
                 "daysBefore", String.valueOf(reminder.getDaysBefore())
         );
 
-        List<String> tokens = getOrgUserTokens(order.getOrganizationId());
+        List<String> tokens = getWorkerTokens(order.getOrganizationId());
         if (!tokens.isEmpty()) {
             notificationGateway.sendToMultipleTokens(tokens, title, body, data);
         }
     }
 
-    private List<String> getOrgUserTokens(UUID organizationId) {
+    private void sendOverdueAlert(Order order) {
+        String title = "Pedido atrasado";
+        String body = String.format("Pedido #%s - %s para %s venci\u00f3 el %s",
+                order.getOrderNumber(), order.getProductName(),
+                order.getClientName(), order.getDeliveryDate().format(DATE_FMT));
+
+        Map<String, String> data = Map.of(
+                "orderId", order.getId().toString(),
+                "orderNumber", order.getOrderNumber(),
+                "type", "OVERDUE_ORDER"
+        );
+
+        List<String> tokens = getWorkerTokens(order.getOrganizationId());
+        if (!tokens.isEmpty()) {
+            notificationGateway.sendToMultipleTokens(tokens, title, body, data);
+        }
+    }
+
+    private List<String> getWorkerTokens(UUID organizationId) {
         return userGateway.findByOrganizationId(organizationId).stream()
                 .filter(user -> user.getFcmToken() != null && !user.getFcmToken().isBlank())
                 .filter(user -> user.getRole() == UserRole.ORG_ADMIN || user.getRole() == UserRole.ORG_EMPLOYEE)
@@ -65,11 +93,11 @@ public class ReminderUseCase {
                 .collect(Collectors.toList());
     }
 
-    private String buildTitle(int daysBefore) {
+    private String buildUpcomingTitle(int daysBefore) {
         return switch (daysBefore) {
-            case 0 -> "¡Entrega hoy!";
-            case 1 -> "¡Entrega mañana!";
-            default -> "Entrega en " + daysBefore + " días";
+            case 0 -> "Entrega hoy";
+            case 1 -> "Entrega ma\u00f1ana";
+            default -> "Entrega en " + daysBefore + " d\u00edas";
         };
     }
 }
