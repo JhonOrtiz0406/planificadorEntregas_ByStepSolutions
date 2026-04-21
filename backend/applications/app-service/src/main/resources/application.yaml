@@ -83,6 +83,11 @@ app:
     service-account-json: ${FIREBASE_SERVICE_ACCOUNT_JSON}
     storage-bucket: ${FIREBASE_STORAGE_BUCKET}
 
+  whatsapp:
+    access-token: ${WHATSAPP_ACCESS_TOKEN:}
+    phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
+    webhook-verify-token: ${WHATSAPP_WEBHOOK_VERIFY_TOKEN:}
+
 management:
   endpoints:
     web:

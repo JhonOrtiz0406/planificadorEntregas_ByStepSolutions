@@ -61,6 +61,11 @@ public class OrderAdapter implements OrderGateway {
     }
 
     @Override
+    public List<Order> findOverdueOrders(LocalDate date) {
+        return repository.findOverdueOrders(date).stream().map(this::toModel).collect(Collectors.toList());
+    }
+
+    @Override
     public String generateOrderNumber(UUID organizationId) {
         long count = repository.countByOrganizationId(organizationId) + 1;
         return String.format("ORD-%06d", count);

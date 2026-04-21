@@ -26,4 +26,6 @@ public interface OrderGateway {
     void deleteById(UUID id);
 
     String generateOrderNumber(UUID organizationId);
+
+    List<Order> findOverdueOrders(LocalDate date);
 }

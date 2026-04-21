@@ -9,8 +9,11 @@ import tech.bystep.planificador.usecase.*;
 public class UseCasesConfig {
 
     @Bean
-    public OrderUseCase orderUseCase(OrderGateway orderGateway, ReminderGateway reminderGateway) {
-        return new OrderUseCase(orderGateway, reminderGateway);
+    public OrderUseCase orderUseCase(OrderGateway orderGateway, ReminderGateway reminderGateway,
+                                     tech.bystep.planificador.model.gateways.WhatsAppGateway whatsAppGateway,
+                                     NotificationGateway notificationGateway,
+                                     tech.bystep.planificador.model.gateways.UserGateway userGateway) {
+        return new OrderUseCase(orderGateway, reminderGateway, whatsAppGateway, notificationGateway, userGateway);
     }
 
     @Bean
