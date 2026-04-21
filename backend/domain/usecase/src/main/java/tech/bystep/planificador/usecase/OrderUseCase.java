@@ -109,53 +109,39 @@ public class OrderUseCase {
     // ── WhatsApp — client notifications ────────────────────────────────────
 
     private void notifyClientOrderCreated(Order order) {
-        String msg = String.format(
-                "Hola %s, su pedido *%s* ha sido registrado correctamente. " +
-                "Fecha estimada de entrega: *%s*. Le notificaremos sobre el estado. " +
-                "N\u00famero de pedido: #%s",
-                order.getClientName(), order.getProductName(),
-                order.getDeliveryDate().format(DATE_FMT), order.getOrderNumber());
-        sendWhatsApp(order.getClientPhone(), msg);
+        sendWhatsApp(order.getClientPhone(), "pedido_creado", List.of(
+                order.getClientName(),
+                order.getProductName(),
+                order.getDeliveryDate().format(DATE_FMT),
+                order.getOrderNumber()
+        ));
     }
 
     private void notifyClientDateChanged(Order order, LocalDate newDate) {
-        String msg = String.format(
-                "Hola %s, la fecha de entrega de su pedido *%s* ha cambiado. " +
-                "Nueva fecha estimada: *%s*. N\u00famero de pedido: #%s",
-                order.getClientName(), order.getProductName(),
-                newDate.format(DATE_FMT), order.getOrderNumber());
-        sendWhatsApp(order.getClientPhone(), msg);
+        sendWhatsApp(order.getClientPhone(), "cambio_fecha", List.of(
+                order.getClientName(),
+                order.getProductName(),
+                newDate.format(DATE_FMT),
+                order.getOrderNumber()
+        ));
     }
 
     private void notifyStatusChange(Order order, ProgressStatus status) {
         switch (status) {
             case READY_TO_DELIVER -> {
-                String msg = String.format(
-                        "Hola %s, su pedido *%s* ya est\u00e1 listo y ser\u00e1 enviado pronto. " +
-                        "N\u00famero de pedido: #%s",
-                        order.getClientName(), order.getProductName(), order.getOrderNumber());
-                sendWhatsApp(order.getClientPhone(), msg);
+                sendWhatsApp(order.getClientPhone(), "pedido_listo", List.of(
+                        order.getClientName(), order.getProductName(), order.getOrderNumber()));
                 notifyDeliveryWorkers(order);
             }
-            case IN_PREPARATION -> {
-                String msg = String.format(
-                        "Hola %s, su pedido *%s* est\u00e1 en preparaci\u00f3n. " +
-                        "Pronto estar\u00e1 listo. N\u00famero de pedido: #%s",
-                        order.getClientName(), order.getProductName(), order.getOrderNumber());
-                sendWhatsApp(order.getClientPhone(), msg);
-            }
-            case DELIVERED -> {
-                String msg = String.format(
-                        "Hola %s, su pedido *%s* ha sido entregado exitosamente. " +
-                        "\u00a1Gracias por su confianza! N\u00famero de pedido: #%s",
-                        order.getClientName(), order.getProductName(), order.getOrderNumber());
-                sendWhatsApp(order.getClientPhone(), msg);
-            }
+            case IN_PREPARATION -> sendWhatsApp(order.getClientPhone(), "pedido_en_preparacion", List.of(
+                    order.getClientName(), order.getProductName(), order.getOrderNumber()));
+            case DELIVERED -> sendWhatsApp(order.getClientPhone(), "pedido_entregado", List.of(
+                    order.getClientName(), order.getProductName(), order.getOrderNumber()));
             default -> { /* otros estados: sin notificación al cliente */ }
         }
     }
 
-    // ── FCM — delivery worker notification on PENDING_DELIVERY ─────────────
+    // ── FCM — delivery worker notification on READY_TO_DELIVER ─────────────
 
     private void notifyDeliveryWorkers(Order order) {
         List<String> tokens = userGateway.findByOrganizationId(order.getOrganizationId()).stream()
@@ -167,7 +153,7 @@ public class OrderUseCase {
         if (tokens.isEmpty()) return;
 
         String title = "Nuevo pedido asignado";
-        String body = String.format("Pedido #%s - %s para %s. Direcci\u00f3n: %s",
+        String body = String.format("Pedido #%s - %s para %s. Direccion: %s",
                 order.getOrderNumber(), order.getProductName(),
                 order.getClientName(), order.getClientAddress());
 
@@ -182,9 +168,9 @@ public class OrderUseCase {
 
     // ── Helpers ─────────────────────────────────────────────────────────────
 
-    private void sendWhatsApp(String phone, String message) {
+    private void sendWhatsApp(String phone, String templateName, List<String> params) {
         if (phone != null && !phone.isBlank()) {
-            whatsAppGateway.sendMessage(phone, message);
+            whatsAppGateway.sendTemplate(phone, templateName, params);
         }
     }
 

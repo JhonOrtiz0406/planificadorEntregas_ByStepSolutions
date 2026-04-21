@@ -87,6 +87,8 @@ app:
     access-token: ${WHATSAPP_ACCESS_TOKEN:}
     phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
     webhook-verify-token: ${WHATSAPP_WEBHOOK_VERIFY_TOKEN:}
+    test-mode: ${WHATSAPP_TEST_MODE:false}
+    language: ${WHATSAPP_LANGUAGE:es}
 
 management:
   endpoints:

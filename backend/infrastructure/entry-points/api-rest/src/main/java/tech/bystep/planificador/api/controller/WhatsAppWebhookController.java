@@ -24,6 +24,8 @@ public class WhatsAppWebhookController {
             @RequestParam("hub.verify_token") String token,
             @RequestParam("hub.challenge") String challenge) {
 
+        log.info("Webhook verify — received token length={}, configured token length={}",
+                token.length(), verifyToken.length());
         if ("subscribe".equals(mode) && verifyToken.equals(token)) {
             log.info("WhatsApp webhook verified successfully");
             return ResponseEntity.ok(challenge);

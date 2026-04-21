@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import tech.bystep.planificador.model.gateways.WhatsAppGateway;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -25,12 +25,22 @@ public class WhatsAppAdapter implements WhatsAppGateway {
     @Value("${app.whatsapp.phone-number-id:}")
     private String phoneNumberId;
 
+    /**
+     * When true: all events send the pre-approved "hello_world" template (sandbox testing).
+     * When false: sends the real custom template by name.
+     */
+    @Value("${app.whatsapp.test-mode:false}")
+    private boolean testMode;
+
+    @Value("${app.whatsapp.language:es}")
+    private String language;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public void sendMessage(String phoneNumber, String message) {
+    public void sendTemplate(String phoneNumber, String templateName, List<String> parameters) {
         if (accessToken.isBlank() || phoneNumberId.isBlank()) {
-            log.warn("WhatsApp not configured — skipping message to {}", phoneNumber);
+            log.warn("WhatsApp not configured — skipping template '{}' to {}", templateName, phoneNumber);
             return;
         }
         String normalized = normalizePhone(phoneNumber);
@@ -39,7 +49,12 @@ public class WhatsAppAdapter implements WhatsAppGateway {
             return;
         }
 
-        Map<String, Object> body = buildPayload(normalized, message);
+        String resolvedTemplate = testMode ? "hello_world" : templateName;
+        String resolvedLang    = testMode ? "en_US"       : language;
+        List<String> resolvedParams = testMode ? List.of() : parameters;
+
+        Map<String, Object> body = buildPayload(normalized, resolvedTemplate, resolvedLang, resolvedParams);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(accessToken);
@@ -51,23 +66,37 @@ public class WhatsAppAdapter implements WhatsAppGateway {
                     String.class,
                     phoneNumberId
             );
-            log.info("WhatsApp sent to {}", normalized);
+            log.info("WhatsApp template '{}' sent to {} (testMode={})", resolvedTemplate, normalized, testMode);
         } catch (Exception e) {
-            log.warn("WhatsApp send failed to {}: {}", normalized, e.getMessage());
+            log.warn("WhatsApp send failed to {} template '{}': {}", normalized, resolvedTemplate, e.getMessage());
         }
     }
 
-    private Map<String, Object> buildPayload(String to, String messageText) {
-        Map<String, Object> text = new LinkedHashMap<>();
-        text.put("preview_url", false);
-        text.put("body", messageText);
+    private Map<String, Object> buildPayload(String to, String templateName,
+                                             String langCode, List<String> params) {
+        Map<String, Object> language = new LinkedHashMap<>();
+        language.put("code", langCode);
+
+        Map<String, Object> template = new LinkedHashMap<>();
+        template.put("name", templateName);
+        template.put("language", language);
+
+        if (!params.isEmpty()) {
+            List<Map<String, String>> paramObjs = params.stream()
+                    .map(p -> Map.of("type", "text", "text", p))
+                    .collect(Collectors.toList());
+            Map<String, Object> bodyComponent = new LinkedHashMap<>();
+            bodyComponent.put("type", "body");
+            bodyComponent.put("parameters", paramObjs);
+            template.put("components", List.of(bodyComponent));
+        }
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("messaging_product", "whatsapp");
         payload.put("recipient_type", "individual");
         payload.put("to", to);
-        payload.put("type", "text");
-        payload.put("text", text);
+        payload.put("type", "template");
+        payload.put("template", template);
         return payload;
     }
 
@@ -75,7 +104,6 @@ public class WhatsAppAdapter implements WhatsAppGateway {
         if (phone == null) return null;
         String digits = phone.replaceAll("[^\\d]", "");
         if (digits.isBlank()) return null;
-        // Auto-prefix Colombian country code for 10-digit numbers starting with 3
         if (digits.length() == 10 && digits.startsWith("3")) {
             digits = "57" + digits;
         }
