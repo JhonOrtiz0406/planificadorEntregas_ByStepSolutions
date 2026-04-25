@@ -70,6 +70,15 @@
   color: white !important;
 }
 
+.theme-toggle-btn {
+  color: rgba(255,255,255,0.85) !important;
+  transition: transform 0.3s ease, color 0.2s !important;
+}
+.theme-toggle-btn:hover {
+  color: white !important;
+  transform: rotate(20deg);
+}
+
 /* ── Sidenav ── */
 .app-sidenav {
   width: 280px;

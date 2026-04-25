@@ -39,6 +39,14 @@ services:
     networks:
       - delivery-network
       - dokploy-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 384M
     healthcheck:
       test: [ "CMD", "wget", "-qO-", "http://localhost:8084/actuator/health" ]
       interval: 30s
@@ -81,6 +89,14 @@ services:
     networks:
       - delivery-network
       - dokploy-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.05'
+          memory: 32M
     logging:
       driver: "json-file"
       options:

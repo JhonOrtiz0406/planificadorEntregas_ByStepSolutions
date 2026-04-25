@@ -22,6 +22,291 @@
   --radius-sm: 8px;
 }
 
+/* ══════════════════════════════════════════
+   DARK MODE — complete override system
+   ══════════════════════════════════════════ */
+body.dark-mode {
+  --primary: #818cf8;
+  --primary-dark: #6366f1;
+  --primary-light: #a5b4fc;
+  --accent: #fbbf24;
+  --accent-dark: #f59e0b;
+  --success: #34d399;
+  --warning: #fb923c;
+  --danger: #f87171;
+  --surface: #252358;
+  --bg: #1a1836;
+  --text-primary: #eceaff;
+  --text-secondary: #b0aed4;
+  --border: #35325e;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow: 0 4px 16px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.4);
+}
+
+/* ── Base elements ── */
+body.dark-mode mat-card {
+  background: #252358 !important;
+  border-color: rgba(129,140,248,0.12) !important;
+}
+
+body.dark-mode .app-footer {
+  background: #252358 !important;
+  border-top-color: rgba(129,140,248,0.1) !important;
+  color: var(--text-secondary) !important;
+}
+
+body.dark-mode .snack-success .mdc-snackbar__surface { background: #064e3b !important; color: #6ee7b7 !important; }
+body.dark-mode .snack-error .mdc-snackbar__surface { background: #7f1d1d !important; color: #fca5a5 !important; }
+
+/* ── Material form fields ── */
+body.dark-mode .mat-mdc-form-field-appearance-outline .mdc-notched-outline__leading,
+body.dark-mode .mat-mdc-form-field-appearance-outline .mdc-notched-outline__notch,
+body.dark-mode .mat-mdc-form-field-appearance-outline .mdc-notched-outline__trailing {
+  border-color: rgba(129,140,248,0.3) !important;
+}
+body.dark-mode .mat-mdc-input-element,
+body.dark-mode .mat-mdc-select-value,
+body.dark-mode .mdc-text-field__input { color: var(--text-primary) !important; }
+body.dark-mode .mdc-floating-label,
+body.dark-mode .mat-mdc-floating-label { color: var(--text-secondary) !important; }
+body.dark-mode .mat-mdc-select-panel,
+body.dark-mode .mat-mdc-autocomplete-panel { background: #252358 !important; }
+body.dark-mode .mat-mdc-option { color: var(--text-primary) !important; }
+body.dark-mode .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+  background: rgba(129,140,248,0.15) !important; color: var(--primary) !important;
+}
+body.dark-mode .mdc-form-field label { color: var(--text-primary) !important; }
+
+/* ── Material radio buttons ── */
+body.dark-mode .mdc-radio .mdc-radio__native-control:enabled + .mdc-radio__background .mdc-radio__outer-circle {
+  border-color: rgba(129,140,248,0.5) !important;
+}
+
+/* ── Material table ── */
+body.dark-mode .mat-mdc-header-cell {
+  background: rgba(255,255,255,0.03) !important;
+  color: var(--text-secondary) !important;
+  border-bottom-color: var(--border) !important;
+}
+body.dark-mode .mat-mdc-cell,
+body.dark-mode .mdc-data-table__cell { color: var(--text-primary) !important; border-bottom-color: var(--border) !important; }
+body.dark-mode .mat-mdc-row { background: transparent !important; }
+
+/* ── Datepicker calendar ── */
+body.dark-mode .mat-datepicker-content { background: #252358 !important; color: var(--text-primary) !important; }
+body.dark-mode .mat-calendar-body-cell-content,
+body.dark-mode .mat-calendar-body-label,
+body.dark-mode .mat-calendar-period-button,
+body.dark-mode .mat-calendar-arrow,
+body.dark-mode .mat-calendar-next-button,
+body.dark-mode .mat-calendar-previous-button { color: var(--text-primary) !important; }
+body.dark-mode .mat-calendar-table-header th { color: var(--text-primary) !important; }
+body.dark-mode .mat-calendar-body-cell:not(.mat-calendar-body-disabled):hover > .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) {
+  background-color: rgba(129,140,248,0.15) !important;
+}
+
+/* ── FullCalendar global — capitalize ── */
+.fc .fc-col-header-cell-cushion { text-transform: capitalize; }
+.fc .fc-toolbar-title             { text-transform: capitalize; }
+
+/* ── FullCalendar dark mode ──
+   Usa las custom properties de FullCalendar para tematizar correctamente.
+   --fc-page-bg-color controla el fondo del header sticky.              */
+body.dark-mode .fc {
+  --fc-page-bg-color:    #252358;
+  --fc-neutral-bg-color: #2a2860;
+  --fc-border-color:     #35325e;
+  --fc-today-bg-color:   rgba(129,140,248,0.12);
+  --fc-neutral-text-color: #b0aed4;
+  --fc-list-event-hover-bg-color: rgba(129,140,248,0.08);
+}
+
+body.dark-mode .fc-theme-standard td,
+body.dark-mode .fc-theme-standard th { border-color: #35325e !important; }
+body.dark-mode .fc-theme-standard .fc-scrollgrid { border-color: #35325e !important; }
+
+/* Fondo explícito del header sticky (FullCalendar lo hereda de --fc-page-bg-color
+   pero algunos builds lo pisan con background-color: #fff, forzamos aquí) */
+body.dark-mode .fc-scrollgrid-section-header > th,
+body.dark-mode .fc-scrollgrid-section-sticky  > th,
+body.dark-mode .fc .fc-col-header,
+body.dark-mode .fc-col-header-cell {
+  background-color: #2a2860 !important;
+}
+
+/* Texto de los nombres de días: blanco sobre fondo oscuro */
+body.dark-mode .fc-col-header-cell-cushion,
+body.dark-mode .fc .fc-col-header-cell-cushion,
+body.dark-mode .fc-col-header-cell a,
+body.dark-mode .fc .fc-col-header-cell a {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+}
+
+body.dark-mode .fc .fc-daygrid-day-number { color: #b0aed4 !important; }
+body.dark-mode .fc .fc-daygrid-day.fc-day-today { background: rgba(129,140,248,0.13) !important; }
+body.dark-mode .fc .fc-toolbar-title { color: #eceaff !important; }
+body.dark-mode .fc .fc-button {
+  background: rgba(129,140,248,0.18) !important;
+  border-color: rgba(129,140,248,0.35) !important;
+  color: #eceaff !important;
+}
+body.dark-mode .fc .fc-button:hover { background: rgba(129,140,248,0.32) !important; }
+body.dark-mode .fc .fc-button-primary:not(:disabled).fc-button-active { background: rgba(129,140,248,0.45) !important; }
+
+/* ── Page titles & subtitles (all components) ── */
+body.dark-mode .page-title { color: var(--text-primary) !important; }
+body.dark-mode .page-title mat-icon { color: var(--primary) !important; }
+body.dark-mode .page-subtitle { color: var(--text-secondary) !important; }
+
+/* ── Dashboard stat cards ── */
+body.dark-mode .stat-overdue {
+  background: linear-gradient(135deg, #3b1515 0%, #4c1a1a 100%) !important;
+  border-color: #7f1d1d !important;
+}
+body.dark-mode .stat-overdue .stat-body h3 { color: #fca5a5 !important; }
+body.dark-mode .stat-overdue .stat-body p { color: #f87171 !important; }
+body.dark-mode .stat-overdue .stat-bg-icon mat-icon { color: #ef4444 !important; }
+
+body.dark-mode .stat-today {
+  background: linear-gradient(135deg, #3b2a0c 0%, #4c340f 100%) !important;
+  border-color: #92400e !important;
+}
+body.dark-mode .stat-today .stat-body h3 { color: #fcd34d !important; }
+body.dark-mode .stat-today .stat-body p { color: #fbbf24 !important; }
+body.dark-mode .stat-today .stat-bg-icon mat-icon { color: #f59e0b !important; }
+
+body.dark-mode .stat-total {
+  background: linear-gradient(135deg, #1a1960 0%, #21206b 100%) !important;
+  border-color: #3730a3 !important;
+}
+body.dark-mode .stat-total .stat-body h3 { color: #a5b4fc !important; }
+body.dark-mode .stat-total .stat-body p { color: #818cf8 !important; }
+body.dark-mode .stat-total .stat-bg-icon mat-icon { color: #818cf8 !important; }
+
+/* ── Dashboard calendar/orders card headers ──
+   Especificidad aumentada con .dashboard-container para superar 0-3-1
+   del CSS de componente con encapsulación Angular + !important            */
+body.dark-mode .dashboard-container .calendar-card mat-card-title,
+body.dark-mode .dashboard-container .orders-card mat-card-title,
+body.dark-mode .dashboard-container mat-card-title,
+body.dark-mode .dashboard-container .mat-mdc-card-title { color: #ffffff !important; }
+body.dark-mode .calendar-card mat-card-header,
+body.dark-mode .orders-card mat-card-header { border-bottom-color: var(--border) !important; }
+body.dark-mode .calendar-legend { border-top-color: var(--border) !important; }
+
+/* ── Dashboard order items ── */
+body.dark-mode .order-item:hover { background: rgba(129,140,248,0.08) !important; }
+body.dark-mode .order-num { color: var(--primary-light) !important; }
+body.dark-mode .order-product { color: var(--text-secondary) !important; }
+body.dark-mode .order-client,
+body.dark-mode .order-phone { color: var(--text-secondary) !important; }
+body.dark-mode .order-client mat-icon,
+body.dark-mode .order-phone mat-icon { color: var(--text-secondary) !important; opacity: 0.7; }
+body.dark-mode .delivery-date { color: var(--text-secondary) !important; }
+body.dark-mode .order-arrow { color: rgba(255,255,255,0.2) !important; }
+
+/* ── Days badges dark — intensidad -18% vía rgba ── */
+body.dark-mode .days-overdue { background: rgba(127,29,29,0.42) !important; color: #fca5a5 !important; border-color: rgba(127,29,29,0.55) !important; }
+body.dark-mode .days-critical { background: rgba(127,29,29,0.42) !important; color: #f87171 !important; border-color: rgba(127,29,29,0.55) !important; }
+body.dark-mode .days-warning  { background: rgba(154,52,18,0.38) !important; color: #fdba74 !important; border-color: rgba(154,52,18,0.55) !important; }
+body.dark-mode .days-soon     { background: rgba(146,64,14,0.35) !important; color: #fde68a !important; border-color: rgba(146,64,14,0.52) !important; }
+body.dark-mode .days-ok       { background: rgba(29,78,216,0.28) !important; color: #93c5fd !important; border-color: rgba(29,78,216,0.45) !important; }
+
+/* ── Status / payment chips dark ── */
+body.dark-mode .chip-not_started      { background: rgba(100,100,120,0.3) !important; color: #d1d5db !important; }
+body.dark-mode .chip-in_preparation   { background: rgba(30,64,175,0.35) !important;  color: #93c5fd !important; }
+body.dark-mode .chip-delivered        { background: rgba(6,78,59,0.35) !important;    color: #6ee7b7 !important; }
+body.dark-mode .chip-payment-unpaid,
+body.dark-mode .chip-pay-unpaid       { background: rgba(127,29,29,0.35) !important;  color: #fca5a5 !important; }
+body.dark-mode .chip-payment-partial,
+body.dark-mode .chip-pay-partial      { background: rgba(120,53,15,0.35) !important;  color: #fde68a !important; }
+body.dark-mode .chip-payment-paid,
+body.dark-mode .chip-pay-paid         { background: rgba(6,78,59,0.35) !important;    color: #6ee7b7 !important; }
+body.dark-mode .chip-active           { background: rgba(6,78,59,0.35) !important;    color: #6ee7b7 !important; }
+body.dark-mode .chip-inactive         { background: rgba(127,29,29,0.35) !important;  color: #fca5a5 !important; }
+
+/* ── Order detail ── */
+body.dark-mode .header-info h2 { color: var(--text-primary) !important; }
+body.dark-mode .header-info span { color: var(--text-secondary) !important; }
+body.dark-mode .detail-header button[mat-icon-button] {
+  background: rgba(255,255,255,0.06) !important;
+  box-shadow: none !important;
+}
+body.dark-mode .detail-header button[mat-icon-button]:hover { background: rgba(129,140,248,0.15) !important; }
+body.dark-mode .info-row { color: var(--text-primary) !important; border-bottom-color: var(--border) !important; }
+body.dark-mode .info-row mat-icon { color: rgba(165,180,252,0.6) !important; }
+body.dark-mode .info-row a { color: var(--primary-light) !important; }
+body.dark-mode .card-section-title { color: var(--primary-light) !important; border-bottom-color: var(--border) !important; }
+body.dark-mode .info-card mat-card-title { color: var(--primary-light) !important; }
+body.dark-mode .status-card mat-card-title { color: var(--primary-light) !important; }
+body.dark-mode .radio-group-block {
+  background: rgba(129,140,248,0.07) !important;
+  border-color: rgba(129,140,248,0.15) !important;
+}
+body.dark-mode .radio-group-label { color: var(--primary-light) !important; }
+body.dark-mode .balance-due {
+  background: rgba(245,158,11,0.12) !important;
+  border-color: rgba(245,158,11,0.3) !important;
+}
+body.dark-mode .days-info { color: var(--text-secondary) !important; }
+body.dark-mode .pay-radio-unpaid .mdc-form-field label { color: #f87171 !important; }
+body.dark-mode .pay-radio-partial .mdc-form-field label { color: #fcd34d !important; }
+body.dark-mode .pay-radio-paid .mdc-form-field label { color: #34d399 !important; }
+
+/* ── Order list ── */
+body.dark-mode .mat-mdc-header-cell { background: rgba(255,255,255,0.03) !important; color: var(--text-secondary) !important; }
+body.dark-mode .clickable-row:hover { background: rgba(129,140,248,0.08) !important; }
+body.dark-mode .order-num-cell { color: var(--primary-light) !important; }
+body.dark-mode .product-name { color: var(--text-primary) !important; }
+body.dark-mode .client-cell { color: var(--text-secondary) !important; }
+body.dark-mode .client-cell mat-icon { color: var(--text-secondary) !important; opacity: 0.7; }
+body.dark-mode .date-cell { color: var(--text-secondary) !important; }
+body.dark-mode .date-cell mat-icon { color: var(--text-secondary) !important; opacity: 0.7; }
+body.dark-mode .price-cell { background: rgba(6,78,59,0.25) !important; color: #6ee7b7 !important; }
+body.dark-mode .price-empty { color: rgba(255,255,255,0.2) !important; }
+body.dark-mode .sort-bar {
+  background: rgba(129,140,248,0.06) !important;
+  border-color: rgba(129,140,248,0.12) !important;
+}
+body.dark-mode .sort-label { color: var(--text-secondary) !important; }
+body.dark-mode .sort-label mat-icon { color: var(--primary) !important; }
+body.dark-mode .sort-group-title { color: var(--primary-light) !important; }
+body.dark-mode .sort-divider { background: rgba(129,140,248,0.2) !important; }
+body.dark-mode .results-count { color: var(--text-secondary) !important; }
+body.dark-mode .results-count span { background: rgba(129,140,248,0.15) !important; color: var(--primary-light) !important; }
+body.dark-mode .view-btn { color: rgba(255,255,255,0.25) !important; }
+body.dark-mode .clickable-row:hover .view-btn { color: var(--primary) !important; }
+body.dark-mode .product-thumb-placeholder { background: rgba(129,140,248,0.1) !important; border-color: var(--border) !important; }
+body.dark-mode .product-thumb-placeholder mat-icon { color: var(--primary-light) !important; }
+
+/* ── Order form ── */
+body.dark-mode mat-card-title { color: var(--text-primary) !important; }
+body.dark-mode .section-title { color: var(--primary-light) !important; border-bottom-color: var(--border) !important; }
+body.dark-mode .section-title mat-icon { color: var(--primary-light) !important; }
+body.dark-mode .photo-section {
+  background: rgba(129,140,248,0.07) !important;
+  border-color: rgba(129,140,248,0.25) !important;
+}
+body.dark-mode .photo-label { color: var(--primary-light) !important; }
+body.dark-mode .upload-btn {
+  background: rgba(255,255,255,0.05) !important;
+  border-color: rgba(129,140,248,0.5) !important;
+  color: var(--primary-light) !important;
+}
+body.dark-mode .upload-btn:hover { background: rgba(129,140,248,0.12) !important; }
+body.dark-mode .upload-progress { color: var(--text-secondary) !important; }
+body.dark-mode .form-actions { border-top-color: var(--border) !important; }
+
+/* ── Material mat-card-title global dark ── */
+body.dark-mode .mat-mdc-card-title { color: var(--text-primary) !important; }
+
+/* ── Material sidenav content backdrop ── */
+body.dark-mode .mat-sidenav-container { background: var(--bg) !important; }
+body.dark-mode .mat-sidenav-content { background: var(--bg) !important; }
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -225,6 +510,7 @@ mat-chip {
 .mat-datepicker-content {
   border-radius: 16px !important;
   box-shadow: 0 12px 40px rgba(79,70,229,0.18) !important;
+  background: var(--surface) !important;
 }
 
 .mat-calendar-body-selected {

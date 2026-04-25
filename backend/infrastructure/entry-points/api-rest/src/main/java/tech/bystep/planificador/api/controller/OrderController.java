@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import tech.bystep.planificador.api.dto.request.CreateOrderRequest;
+import tech.bystep.planificador.api.dto.request.UpdateOrderRequest;
 import tech.bystep.planificador.api.dto.request.UpdateOrderStatusRequest;
 import tech.bystep.planificador.api.dto.response.ApiResponse;
 import tech.bystep.planificador.api.dto.response.OrderResponse;
@@ -95,10 +96,10 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ORG_ADMIN')")
+    @PreAuthorize("hasAnyRole('ORG_ADMIN','ORG_EMPLOYEE')")
     public ResponseEntity<ApiResponse<OrderResponse>> updateOrder(
             @PathVariable("id") UUID id,
-            @RequestBody CreateOrderRequest request,
+            @RequestBody UpdateOrderRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
         UUID orgId = UUID.fromString(principal.getOrganizationId());
         Order updates = Order.builder()
@@ -116,7 +117,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasRole('ORG_ADMIN')")
+    @PreAuthorize("hasAnyRole('ORG_ADMIN','ORG_EMPLOYEE')")
     public ResponseEntity<ApiResponse<OrderResponse>> updateStatus(
             @PathVariable("id") UUID id,
             @RequestBody UpdateOrderStatusRequest request,
