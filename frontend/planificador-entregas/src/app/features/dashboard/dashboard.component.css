@@ -231,11 +231,23 @@
 }
 .empty-state p { font-size: 1rem; margin: 0; color: #6b7280; }
 
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+}
+
+.orders-list mat-divider {
+  margin: 2px 12px !important;
+  opacity: 0.5;
+}
+
 .order-item {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 14px 8px;
+  padding: 16px 12px;
   cursor: pointer;
   border-radius: 10px;
   transition: background 0.2s, transform 0.15s;

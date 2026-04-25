@@ -24,7 +24,7 @@ USER appuser
 
 COPY --from=builder /app/applications/app-service/build/libs/delivery-planner.jar app.jar
 
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=70 -Djava.security.egd=file:/dev/./urandom -Dspring.profiles.active=prod"
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=65 -XX:InitialRAMPercentage=40 -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -Djava.security.egd=file:/dev/./urandom -Dspring.profiles.active=prod"
 
 EXPOSE 8084
 

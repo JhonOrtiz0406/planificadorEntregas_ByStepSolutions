@@ -11,6 +11,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from './core/services/auth.service';
 import { NotificationService } from './core/services/notification.service';
+import { ThemeService } from './core/services/theme.service';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -26,6 +27,7 @@ import { environment } from '../environments/environment';
 })
 export class AppComponent implements OnInit {
   authService = inject(AuthService);
+  themeService = inject(ThemeService);
   private notificationService = inject(NotificationService);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);

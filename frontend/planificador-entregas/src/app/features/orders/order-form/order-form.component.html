@@ -96,7 +96,8 @@
           <div class="two-cols">
             <mat-form-field appearance="outline">
               <mat-label>Fecha de entrega *</mat-label>
-              <input matInput [matDatepicker]="picker" formControlName="deliveryDate" [min]="minDate"
+              <input matInput [matDatepicker]="picker" formControlName="deliveryDate"
+                     [min]="editMode() ? null : minDate"
                      placeholder="DD/MM/AAAA">
               <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
               <mat-datepicker #picker></mat-datepicker>

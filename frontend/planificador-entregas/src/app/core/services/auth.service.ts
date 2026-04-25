@@ -189,7 +189,7 @@ export class AuthService {
   }
 
   canManageOrders(): boolean {
-    return this.hasRole('ORG_ADMIN');
+    return this.hasRole('ORG_ADMIN', 'ORG_EMPLOYEE');
   }
 
   canCreateOrders(): boolean {
@@ -197,6 +197,10 @@ export class AuthService {
   }
 
   canUpdateStatus(): boolean {
+    return this.hasRole('ORG_ADMIN', 'ORG_EMPLOYEE');
+  }
+
+  canDeleteOrders(): boolean {
     return this.hasRole('ORG_ADMIN');
   }
 
