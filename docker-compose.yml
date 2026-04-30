@@ -36,6 +36,15 @@ services:
       WHATSAPP_LANGUAGE: ${WHATSAPP_LANGUAGE:-es}
     expose:
       - "8084"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend-http.rule=Host(`api.delivery-planner.bystepsolutions.tech`)"
+      - "traefik.http.routers.backend-http.entrypoints=web"
+      - "traefik.http.routers.backend-http.middlewares=redirect-to-https@file"
+      - "traefik.http.routers.backend-https.rule=Host(`api.delivery-planner.bystepsolutions.tech`)"
+      - "traefik.http.routers.backend-https.entrypoints=websecure"
+      - "traefik.http.routers.backend-https.tls.certresolver=letsencrypt"
+      - "traefik.http.services.backend-service.loadbalancer.server.port=8084"
     networks:
       - delivery-network
       - dokploy-network
@@ -83,6 +92,15 @@ services:
       BACKEND_URL: ${BACKEND_URL:-backend:8084}
     expose:
       - "80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend-http.rule=Host(`delivery-planner.bystepsolutions.tech`)"
+      - "traefik.http.routers.frontend-http.entrypoints=web"
+      - "traefik.http.routers.frontend-http.middlewares=redirect-to-https@file"
+      - "traefik.http.routers.frontend-https.rule=Host(`delivery-planner.bystepsolutions.tech`)"
+      - "traefik.http.routers.frontend-https.entrypoints=websecure"
+      - "traefik.http.routers.frontend-https.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend-service.loadbalancer.server.port=80"
     depends_on:
       backend:
         condition: service_healthy
