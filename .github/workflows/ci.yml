@@ -66,20 +66,3 @@ jobs:
         working-directory: frontend/planificador-entregas
         run: npm run build
 
-  # ────────────────────────────────────────────────
-  # Notify Dokploy — ONLY on push to main (trunk)
-  # Triggers full stack redeploy (backend + frontend)
-  # after all checks pass.
-  # Requires secret: DOKPLOY_WEBHOOK_STACK
-  # Get URL from: Dokploy → Stack → Deployments → Webhook URL
-  # ────────────────────────────────────────────────
-  notify-deploy:
-    name: Trigger Dokploy Deploy
-    runs-on: ubuntu-latest
-    needs: [backend, frontend]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: Deploy stack (backend + frontend)
-        run: |
-          curl -f --connect-timeout 30 --max-time 60 -X GET "${{ secrets.DOKPLOY_WEBHOOK_STACK }}"
