@@ -1,10 +1,6 @@
 services:
   backend:
-    build:
-      context: ./backend
-      dockerfile: deployment/Dockerfile
-    container_name: delivery-planner-backend
-    restart: unless-stopped
+    image: ghcr.io/jhonortiz0406/delivery-planner-backend:latest
     environment:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT:-5432}
@@ -31,12 +27,11 @@ services:
       WHATSAPP_WEBHOOK_VERIFY_TOKEN: ${WHATSAPP_WEBHOOK_VERIFY_TOKEN:-}
       WHATSAPP_TEST_MODE: ${WHATSAPP_TEST_MODE:-false}
       WHATSAPP_LANGUAGE: ${WHATSAPP_LANGUAGE:-es}
-    expose:
-      - "8084"
     networks:
       - delivery-network
       - dokploy-network
     deploy:
+      replicas: 1
       resources:
         limits:
           cpus: '1.0'
@@ -44,8 +39,20 @@ services:
         reservations:
           cpus: '0.25'
           memory: 384M
+      update_config:
+        order: start-first
+        failure_action: rollback
+        delay: 10s
+        monitor: 120s
+      rollback_config:
+        order: stop-first
+        failure_action: continue
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
     healthcheck:
-      test: [ "CMD", "wget", "-qO-", "http://localhost:8084/actuator/health" ]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8084/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -57,33 +64,14 @@ services:
         max-file: "3"
 
   frontend:
-    build:
-      context: ./frontend/planificador-entregas
-      dockerfile: Dockerfile
-      args:
-        API_URL: ${API_URL:-}
-        APP_NAME: ${APP_NAME:-DeliveryPlanner}
-        GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-        FIREBASE_API_KEY: ${FIREBASE_API_KEY}
-        FIREBASE_AUTH_DOMAIN: ${FIREBASE_AUTH_DOMAIN}
-        FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
-        FIREBASE_STORAGE_BUCKET: ${FIREBASE_STORAGE_BUCKET}
-        FIREBASE_MESSAGING_SENDER_ID: ${FIREBASE_MESSAGING_SENDER_ID}
-        FIREBASE_APP_ID: ${FIREBASE_APP_ID}
-        FIREBASE_VAPID_KEY: ${FIREBASE_VAPID_KEY}
-    container_name: delivery-planner-frontend
-    restart: unless-stopped
+    image: ghcr.io/jhonortiz0406/delivery-planner-frontend:latest
     environment:
       BACKEND_URL: ${BACKEND_URL:-backend:8084}
-    expose:
-      - "80"
-    depends_on:
-      backend:
-        condition: service_started
     networks:
       - delivery-network
       - dokploy-network
     deploy:
+      replicas: 1
       resources:
         limits:
           cpus: '0.5'
@@ -91,6 +79,15 @@ services:
         reservations:
           cpus: '0.05'
           memory: 32M
+      update_config:
+        order: start-first
+        failure_action: rollback
+        delay: 5s
+        monitor: 30s
+      rollback_config:
+        order: stop-first
+      restart_policy:
+        condition: on-failure
     logging:
       driver: "json-file"
       options:
@@ -99,7 +96,7 @@ services:
 
 networks:
   delivery-network:
-    driver: bridge
+    driver: overlay
     name: delivery-network
   dokploy-network:
     external: true
