@@ -120,8 +120,7 @@ services:
 
 networks:
   delivery-network:
-    driver: overlay
-    attachable: true
+    external: true
     name: delivery-network
   dokploy-network:
     external: true

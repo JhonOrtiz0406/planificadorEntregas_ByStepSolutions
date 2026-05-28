@@ -84,17 +84,31 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           envs: GHCR_TOKEN
           script: |
+            set -e
             APP_DIR="/etc/dokploy/compose/planificador-entregas-full-aplicacion-tp0u8a/code"
 
-            # Autenticar en GHCR para pull de imágenes
+            # Autenticar en GHCR
             echo "$GHCR_TOKEN" | docker login ghcr.io -u jhonortiz0406 --password-stdin
 
-            # Pre-pull para que el rollout no espere el pull
+            # Pre-pull imágenes
             docker pull ghcr.io/jhonortiz0406/delivery-planner-backend:latest
             docker pull ghcr.io/jhonortiz0406/delivery-planner-frontend:latest
 
-            # Cargar env vars que administra Dokploy
-            set -a && source "$APP_DIR/.env" && set +a
+            # Escribir parser de .env (maneja JSON y valores complejos)
+            cat > /tmp/load_env.py << 'PYEOF'
+            import re, sys
+            with open(sys.argv[1]) as f:
+                content = f.read()
+            pattern = r'^([A-Z_][A-Z0-9_]*)\s*=\s*(.*?)(?=\n[A-Z_]|\Z)'
+            for m in re.finditer(pattern, content.strip() + '\n', re.MULTILINE | re.DOTALL):
+                key = m.group(1)
+                val = m.group(2).strip().rstrip('\n')
+                escaped = val.replace("'", "'\"'\"'")
+                print(f"export {key}='{escaped}'")
+            PYEOF
+
+            # Cargar env vars
+            eval $(python3 /tmp/load_env.py "$APP_DIR/.env")
 
             # Rolling deploy — start-first, rollback automático si falla healthcheck
             docker stack deploy \
