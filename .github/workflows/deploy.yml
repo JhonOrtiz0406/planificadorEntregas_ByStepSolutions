@@ -5,9 +5,10 @@ on:
     branches: [main]
 
 env:
-  REGISTRY: ghcr.io
   BACKEND_IMAGE: ghcr.io/jhonortiz0406/delivery-planner-backend
   FRONTEND_IMAGE: ghcr.io/jhonortiz0406/delivery-planner-frontend
+  STACK_NAME: delivery-planner
+  APP_DIR: /etc/dokploy/compose/planificador-entregas-full-aplicacion-tp0u8a/code
 
 jobs:
   build-and-deploy:
@@ -64,7 +65,40 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Trigger Dokploy deploy
-        run: |
-          curl -s -o /dev/null -w "%{http_code}" \
-            -X POST "${{ secrets.DOKPLOY_WEBHOOK_STACK }}"
+      - name: Copy docker-stack.yml to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: docker-stack.yml
+          target: ${{ env.APP_DIR }}
+
+      - name: Deploy to Swarm
+        uses: appleboy/ssh-action@v1
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: GHCR_TOKEN
+          script: |
+            APP_DIR="/etc/dokploy/compose/planificador-entregas-full-aplicacion-tp0u8a/code"
+
+            # Autenticar en GHCR para pull de imágenes
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u jhonortiz0406 --password-stdin
+
+            # Pre-pull para que el rollout no espere el pull
+            docker pull ghcr.io/jhonortiz0406/delivery-planner-backend:latest
+            docker pull ghcr.io/jhonortiz0406/delivery-planner-frontend:latest
+
+            # Cargar env vars que administra Dokploy
+            set -a && source "$APP_DIR/.env" && set +a
+
+            # Rolling deploy — start-first, rollback automático si falla healthcheck
+            docker stack deploy \
+              --with-registry-auth \
+              --compose-file "$APP_DIR/docker-stack.yml" \
+              --detach=false \
+              delivery-planner

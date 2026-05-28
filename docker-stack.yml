@@ -51,6 +51,18 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=dokploy-network"
+        - "traefik.http.routers.delivery-backend-web.rule=Host(`api.delivery-planner.bystepsolutions.tech`)"
+        - "traefik.http.routers.delivery-backend-web.entrypoints=web"
+        - "traefik.http.routers.delivery-backend-web.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.delivery-backend-web.service=delivery-backend-svc"
+        - "traefik.http.routers.delivery-backend-websecure.rule=Host(`api.delivery-planner.bystepsolutions.tech`)"
+        - "traefik.http.routers.delivery-backend-websecure.entrypoints=websecure"
+        - "traefik.http.routers.delivery-backend-websecure.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.delivery-backend-websecure.service=delivery-backend-svc"
+        - "traefik.http.services.delivery-backend-svc.loadbalancer.server.port=8084"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8084/actuator/health"]
       interval: 30s
@@ -88,6 +100,18 @@ services:
         order: stop-first
       restart_policy:
         condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=dokploy-network"
+        - "traefik.http.routers.delivery-frontend-web.rule=Host(`app.delivery-planner.bystepsolutions.tech`)"
+        - "traefik.http.routers.delivery-frontend-web.entrypoints=web"
+        - "traefik.http.routers.delivery-frontend-web.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.delivery-frontend-web.service=delivery-frontend-svc"
+        - "traefik.http.routers.delivery-frontend-websecure.rule=Host(`app.delivery-planner.bystepsolutions.tech`)"
+        - "traefik.http.routers.delivery-frontend-websecure.entrypoints=websecure"
+        - "traefik.http.routers.delivery-frontend-websecure.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.delivery-frontend-websecure.service=delivery-frontend-svc"
+        - "traefik.http.services.delivery-frontend-svc.loadbalancer.server.port=80"
     logging:
       driver: "json-file"
       options:
@@ -97,6 +121,7 @@ services:
 networks:
   delivery-network:
     driver: overlay
+    attachable: true
     name: delivery-network
   dokploy-network:
     external: true
