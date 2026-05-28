@@ -28,7 +28,6 @@ services:
       WHATSAPP_TEST_MODE: ${WHATSAPP_TEST_MODE:-false}
       WHATSAPP_LANGUAGE: ${WHATSAPP_LANGUAGE:-es}
     networks:
-      - delivery-network
       - dokploy-network
     deploy:
       replicas: 1
@@ -80,7 +79,6 @@ services:
     environment:
       BACKEND_URL: ${BACKEND_URL:-backend:8084}
     networks:
-      - delivery-network
       - dokploy-network
     deploy:
       replicas: 1
@@ -119,9 +117,6 @@ services:
         max-file: "3"
 
 networks:
-  delivery-network:
-    external: true
-    name: delivery-network
   dokploy-network:
     external: true
     name: dokploy-network
