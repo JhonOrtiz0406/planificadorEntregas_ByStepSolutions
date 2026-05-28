@@ -96,3 +96,4 @@ yarn-debug.log*
 /scripts/start-all.ps1
 /scripts/start-backend.ps1
 /scripts/start-frontend.ps1
+/TLS_AUDIT.md
