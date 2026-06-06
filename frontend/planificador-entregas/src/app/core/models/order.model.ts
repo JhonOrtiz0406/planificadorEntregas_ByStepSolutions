@@ -10,6 +10,7 @@ export interface Order {
   clientAddress?: string;
   description?: string;
   photoUrl?: string;
+  photoUrls?: string[];
   deliveryDate: string;
   progressStatus: ProgressStatus;
   paymentStatus: PaymentStatus;
@@ -30,8 +31,26 @@ export interface CreateOrderRequest {
   clientAddress?: string;
   description?: string;
   photoUrl?: string;
+  photoUrls?: string[];
   deliveryDate: string;
   totalPrice?: number;
+}
+
+export interface PaymentRecord {
+  id: string;
+  orderId: string;
+  amount: number;
+  paymentDate: string;
+  paymentMethod?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface AddPaymentRecordRequest {
+  amount: number;
+  paymentDate: string;
+  paymentMethod?: string;
+  notes?: string;
 }
 
 export interface UpdateOrderStatusRequest {

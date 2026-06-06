@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -23,6 +24,8 @@ public class OrderUseCase {
     private final WhatsAppGateway whatsAppGateway;
     private final NotificationGateway notificationGateway;
     private final UserGateway userGateway;
+    private final tech.bystep.planificador.model.gateways.PaymentRecordGateway paymentRecordGateway;
+    private final tech.bystep.planificador.model.gateways.StorageGateway storageGateway;
 
     public Order create(Order order) {
         order.setOrderNumber(orderGateway.generateOrderNumber(order.getOrganizationId()));
@@ -60,8 +63,59 @@ public class OrderUseCase {
             notifyClientDateChanged(existing, newDate);
         }
 
+        if (updates.getPhotoUrls() != null) existing.setPhotoUrls(updates.getPhotoUrls());
         existing.setUpdatedAt(LocalDateTime.now());
         return orderGateway.save(existing);
+    }
+
+    public Order removePhoto(UUID id, UUID organizationId, String photoUrl) {
+        Order order = orderGateway.findByIdAndOrganizationId(id, organizationId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + id));
+        List<String> photos = order.getPhotoUrls() != null
+                ? new ArrayList<>(order.getPhotoUrls()) : new ArrayList<>();
+        photos.remove(photoUrl);
+        order.setPhotoUrls(photos);
+        order.setUpdatedAt(LocalDateTime.now());
+        Order saved = orderGateway.save(order);
+        storageGateway.deleteFile(photoUrl);
+        return saved;
+    }
+
+    public tech.bystep.planificador.model.PaymentRecord addPaymentRecord(
+            UUID orderId, UUID organizationId,
+            java.math.BigDecimal amount, LocalDate paymentDate,
+            String paymentMethod, String notes) {
+        Order order = orderGateway.findByIdAndOrganizationId(orderId, organizationId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+        tech.bystep.planificador.model.PaymentRecord record = tech.bystep.planificador.model.PaymentRecord.builder()
+                .orderId(orderId).amount(amount).paymentDate(paymentDate)
+                .paymentMethod(paymentMethod).notes(notes).createdAt(LocalDateTime.now())
+                .build();
+        tech.bystep.planificador.model.PaymentRecord saved = paymentRecordGateway.save(record);
+        // Recalculate cached paymentAmount on order
+        java.math.BigDecimal total = paymentRecordGateway.sumAmountByOrderId(orderId);
+        order.setPaymentAmount(total);
+        order.setUpdatedAt(LocalDateTime.now());
+        orderGateway.save(order);
+        return saved;
+    }
+
+    public List<tech.bystep.planificador.model.PaymentRecord> getPaymentRecords(UUID orderId, UUID organizationId) {
+        orderGateway.findByIdAndOrganizationId(orderId, organizationId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+        return paymentRecordGateway.findByOrderId(orderId);
+    }
+
+    public void deletePaymentRecord(UUID orderId, UUID organizationId, UUID recordId) {
+        Order order = orderGateway.findByIdAndOrganizationId(orderId, organizationId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+        paymentRecordGateway.findById(recordId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment record not found: " + recordId));
+        paymentRecordGateway.deleteById(recordId);
+        java.math.BigDecimal total = paymentRecordGateway.sumAmountByOrderId(orderId);
+        order.setPaymentAmount(total);
+        order.setUpdatedAt(LocalDateTime.now());
+        orderGateway.save(order);
     }
 
     public Order updateProgressStatus(UUID id, UUID organizationId, ProgressStatus status) {

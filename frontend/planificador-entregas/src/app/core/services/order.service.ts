@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Order, CreateOrderRequest, UpdateOrderStatusRequest, CalendarEvent } from '../models/order.model';
+import { Order, CreateOrderRequest, UpdateOrderStatusRequest, CalendarEvent, PaymentRecord, AddPaymentRecordRequest } from '../models/order.model';
 import { map } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
@@ -68,5 +68,21 @@ export class OrderService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<any>(`${environment.apiUrl}/files/upload`, formData).pipe(map(r => r.data));
+  }
+
+  deletePhoto(orderId: string, url: string): Observable<Order> {
+    return this.http.delete<any>(`${this.baseUrl}/${orderId}/photos`, { body: { url } }).pipe(map(r => r.data));
+  }
+
+  getPaymentRecords(orderId: string): Observable<PaymentRecord[]> {
+    return this.http.get<any>(`${this.baseUrl}/${orderId}/payments`).pipe(map(r => r.data));
+  }
+
+  addPaymentRecord(orderId: string, request: AddPaymentRecordRequest): Observable<PaymentRecord> {
+    return this.http.post<any>(`${this.baseUrl}/${orderId}/payments`, request).pipe(map(r => r.data));
+  }
+
+  deletePaymentRecord(orderId: string, recordId: string): Observable<void> {
+    return this.http.delete<any>(`${this.baseUrl}/${orderId}/payments/${recordId}`);
   }
 }

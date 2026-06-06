@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class CreateOrderRequest {
@@ -18,6 +19,7 @@ public class CreateOrderRequest {
     private String clientAddress;
     private String description;
     private String photoUrl;
+    private List<String> photoUrls;
     @NotNull
     @Future
     private LocalDate deliveryDate;

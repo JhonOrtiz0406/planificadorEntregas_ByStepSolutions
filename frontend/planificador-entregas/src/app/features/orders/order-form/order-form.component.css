@@ -134,19 +134,54 @@ mat-card-title mat-icon {
   font-size: 0.85rem;
 }
 
-.photo-preview {
-  position: relative;
-  max-width: 280px;
+.photo-gallery {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.preview-img {
-  width: 100%;
+.photo-thumb {
+  position: relative;
+  width: 110px;
+  height: 110px;
   border-radius: 12px;
+  overflow: hidden;
   border: 2px solid rgba(79,70,229,0.2);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-  display: block;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.photo-thumb img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  max-height: 200px;
+  display: block;
+}
+
+.photo-delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(239,68,68,0.9);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.2s;
+}
+
+.photo-delete-btn:hover { background: #dc2626; }
+
+.photo-delete-btn mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
 }
 
 /* ── Form actions ── */

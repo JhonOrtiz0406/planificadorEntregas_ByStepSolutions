@@ -14,10 +14,12 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import { OrderService } from '../../../core/services/order.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { CategoryStatusService } from '../../../core/services/category-status.service';
-import { Order, ProgressStatus, PaymentStatus } from '../../../core/models/order.model';
+import { Order, ProgressStatus, PaymentStatus, PaymentRecord, AddPaymentRecordRequest } from '../../../core/models/order.model';
 import { ConfirmDeliveredDialogComponent } from './confirm-delivered-dialog.component';
 
 @Component({
@@ -27,7 +29,7 @@ import { ConfirmDeliveredDialogComponent } from './confirm-delivered-dialog.comp
     CommonModule, RouterLink, ReactiveFormsModule, MatCardModule, MatButtonModule, MatIconModule,
     MatChipsModule, MatSelectModule, MatFormFieldModule, MatInputModule,
     MatSnackBarModule, MatProgressSpinnerModule, MatDividerModule, MatDialogModule,
-    MatRadioModule
+    MatRadioModule, MatDatepickerModule, MatNativeDateModule
   ],
   templateUrl: './order-detail.component.html',
   styleUrl: './order-detail.component.css'
@@ -45,7 +47,24 @@ export class OrderDetailComponent implements OnInit {
   order = signal<Order | null>(null);
   loading = signal(true);
   updating = signal(false);
+  deletingPhoto = signal(false);
   progressOptions = signal<{ value: string; label: string }[]>([]);
+  paymentRecords = signal<PaymentRecord[]>([]);
+  loadingPayments = signal(false);
+  addingPayment = signal(false);
+  selectedPhoto = signal<string | null>(null);
+
+  paymentForm = this.fb.group({
+    amount: [null as number | null],
+    amountDisplay: [''],
+    paymentDate: [null as Date | null],
+    paymentMethod: [''],
+    notes: ['']
+  });
+
+  readonly paymentMethods = [
+    'Efectivo', 'Transferencia', 'Tarjeta débito', 'Tarjeta crédito', 'Especie / Canje'
+  ];
 
   statusForm = this.fb.group({
     progressStatus: [''],
@@ -81,6 +100,7 @@ export class OrderDetailComponent implements OnInit {
         });
         this.loading.set(false);
         this.watchPaymentStatus();
+        this.loadPaymentRecords(id);
       },
       error: () => {
         this.snackBar.open('Pedido no encontrado', 'Cerrar', { duration: 3000 });
@@ -163,6 +183,101 @@ export class OrderDetailComponent implements OnInit {
     return labels[field] ?? field;
   }
 
+  private loadPaymentRecords(orderId: string): void {
+    this.loadingPayments.set(true);
+    this.orderService.getPaymentRecords(orderId).subscribe({
+      next: (records) => { this.paymentRecords.set(records); this.loadingPayments.set(false); },
+      error: () => this.loadingPayments.set(false)
+    });
+  }
+
+  onPaymentAmountFormInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let raw = input.value.replace(/[^0-9]/g, '');
+    if (raw.length > 13) raw = raw.slice(0, 13);
+    const formatted = raw ? Number(raw).toLocaleString('es-CO') : '';
+    const numeric = raw ? Number(raw) : null;
+    this.paymentForm.get('amountDisplay')?.setValue(formatted, { emitEvent: false });
+    this.paymentForm.get('amount')?.setValue(numeric, { emitEvent: false });
+    input.value = formatted;
+  }
+
+  addPaymentRecord(): void {
+    const val = this.paymentForm.value;
+    if (!val.amount || !val.paymentDate || !this.order()) return;
+    this.addingPayment.set(true);
+    const dateStr = (val.paymentDate as Date).toISOString().split('T')[0];
+    const req: AddPaymentRecordRequest = {
+      amount: val.amount,
+      paymentDate: dateStr,
+      paymentMethod: val.paymentMethod || undefined,
+      notes: val.notes || undefined
+    };
+    this.orderService.addPaymentRecord(this.order()!.id, req).subscribe({
+      next: (record) => {
+        this.paymentRecords.update(r => [record, ...r]);
+        const total = this.paymentRecords().reduce((s, r) => s + r.amount, 0);
+        this.order.update(o => o ? { ...o, paymentAmount: total } : o);
+        this.statusForm.patchValue({
+          paymentAmountDisplay: total.toLocaleString('es-CO'),
+          paymentAmount: total as any
+        });
+        this.paymentForm.reset();
+        this.addingPayment.set(false);
+        this.snackBar.open('Abono registrado', 'Cerrar', { duration: 2000 });
+      },
+      error: (err) => {
+        this.addingPayment.set(false);
+        this.snackBar.open(err.error?.message || 'Error al registrar abono', 'Cerrar', { duration: 3000 });
+      }
+    });
+  }
+
+  deletePaymentRecord(record: PaymentRecord): void {
+    if (!this.order()) return;
+    this.orderService.deletePaymentRecord(this.order()!.id, record.id).subscribe({
+      next: () => {
+        this.paymentRecords.update(r => r.filter(p => p.id !== record.id));
+        const total = this.paymentRecords().reduce((s, r) => s + r.amount, 0);
+        this.order.update(o => o ? { ...o, paymentAmount: total } : o);
+        this.statusForm.patchValue({
+          paymentAmountDisplay: total > 0 ? total.toLocaleString('es-CO') : '',
+          paymentAmount: total > 0 ? total as any : null
+        });
+        this.snackBar.open('Abono eliminado', 'Cerrar', { duration: 2000 });
+      },
+      error: () => this.snackBar.open('Error al eliminar abono', 'Cerrar', { duration: 3000 })
+    });
+  }
+
+  deletePhoto(url: string): void {
+    if (!this.order()) return;
+    this.deletingPhoto.set(true);
+    this.orderService.deletePhoto(this.order()!.id, url).subscribe({
+      next: (updated) => {
+        this.order.set(updated);
+        this.deletingPhoto.set(false);
+        this.snackBar.open('Foto eliminada', 'Cerrar', { duration: 2000 });
+      },
+      error: () => {
+        this.deletingPhoto.set(false);
+        this.snackBar.open('Error al eliminar foto', 'Cerrar', { duration: 3000 });
+      }
+    });
+  }
+
+  openPhoto(url: string): void { this.selectedPhoto.set(url); }
+  closePhoto(): void { this.selectedPhoto.set(null); }
+
+  paymentMethodIcon(method?: string): string {
+    const icons: Record<string, string> = {
+      'Efectivo': 'payments', 'Transferencia': 'account_balance',
+      'Tarjeta débito': 'credit_card', 'Tarjeta crédito': 'credit_card',
+      'Especie / Canje': 'diamond'
+    };
+    return method ? (icons[method] ?? 'attach_money') : 'attach_money';
+  }
+
   deleteOrder(): void {
     if (!confirm('¿Estás seguro de eliminar este pedido?')) return;
     this.orderService.delete(this.order()!.id).subscribe({
@@ -183,5 +298,17 @@ export class OrderDetailComponent implements OnInit {
 
   get isPartialPayment(): boolean {
     return this.statusForm.get('paymentStatus')?.value === 'PARTIAL';
+  }
+
+  get totalPaid(): number {
+    return this.paymentRecords().reduce((s, r) => s + r.amount, 0);
+  }
+
+  orderPhotos(): string[] {
+    const o = this.order();
+    if (!o) return [];
+    if (o.photoUrls && o.photoUrls.length > 0) return o.photoUrls;
+    if (o.photoUrl) return [o.photoUrl];
+    return [];
   }
 }
