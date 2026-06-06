@@ -87,6 +87,10 @@ public class EmailAdapter implements EmailGateway {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(body, true);
+            // Unique Message-ID prevents Gmail from threading unrelated automated emails
+            String domain = fromAddress.contains("@") ? fromAddress.substring(fromAddress.indexOf('@') + 1) : "bystepsolutions.tech";
+            message.setHeader("Message-ID", "<" + java.util.UUID.randomUUID() + "@" + domain + ">");
+            message.setHeader("X-Entity-Ref-ID", java.util.UUID.randomUUID().toString());
             mailSender.send(message);
             log.info("Email sent to {}: {}", to, subject);
         } catch (MessagingException | UnsupportedEncodingException e) {
