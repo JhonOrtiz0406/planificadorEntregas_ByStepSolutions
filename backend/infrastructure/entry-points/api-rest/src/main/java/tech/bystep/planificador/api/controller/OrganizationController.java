@@ -136,6 +136,27 @@ public class OrganizationController {
         return ResponseEntity.ok(ApiResponse.ok("Member deactivated", null));
     }
 
+    @PatchMapping("/{id}/members/{userId}/enable")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','ORG_ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> enableMember(
+            @PathVariable("id") UUID id,
+            @PathVariable("userId") UUID userId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        if ("ORG_ADMIN".equals(principal.getRole()) && !id.toString().equals(principal.getOrganizationId())) {
+            return ResponseEntity.status(403).body(ApiResponse.error("Access denied"));
+        }
+        User target = userUseCase.findById(userId).orElse(null);
+        if (target == null) return ResponseEntity.notFound().build();
+        if ("ORG_ADMIN".equals(principal.getRole())) {
+            String targetRole = target.getRole().name();
+            if ("ORG_ADMIN".equals(targetRole) || "PLATFORM_ADMIN".equals(targetRole)) {
+                return ResponseEntity.status(403).body(ApiResponse.error("Organization admin cannot enable an admin account"));
+            }
+        }
+        userUseCase.activate(userId);
+        return ResponseEntity.ok(ApiResponse.ok("Member enabled", null));
+    }
+
     @DeleteMapping("/{id}/members/{userId}/permanent")
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','ORG_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteMemberPermanently(

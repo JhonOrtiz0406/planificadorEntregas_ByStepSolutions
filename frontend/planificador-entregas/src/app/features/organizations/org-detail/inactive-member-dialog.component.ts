@@ -14,16 +14,20 @@ import { User } from '../../../core/models/user.model';
       <mat-icon style="font-size:56px;width:56px;height:56px;color:#f59e0b;margin-bottom:12px">
         person_off
       </mat-icon>
-      <h3 style="margin:0 0 8px;color:#1e1b4b">Miembro inhabilitado</h3>
-      <p style="color:#6b7280;margin:0 0 4px">
+      <h3 style="margin:0 0 8px;color:var(--text-primary)">Miembro inhabilitado</h3>
+      <p style="color:var(--text-primary);margin:0 0 4px">
         <strong>{{ data.member.name || data.member.email }}</strong>
       </p>
-      <p style="color:#9ca3af;font-size:.85rem;margin:0">
+      <p style="color:var(--text-secondary);font-size:.85rem;margin:0">
         Esta cuenta está inhabilitada y no puede iniciar sesión.
         ¿Qué deseas hacer?
       </p>
     </mat-dialog-content>
-    <mat-dialog-actions align="end" style="padding:16px 24px;gap:8px">
+    <mat-dialog-actions align="center" style="padding:16px 24px;gap:8px;flex-wrap:wrap;justify-content:center">
+      <button mat-raised-button color="primary" (click)="close('enable')">
+        <mat-icon>how_to_reg</mat-icon>
+        Habilitar miembro
+      </button>
       <button mat-stroked-button (click)="close('keep')">
         <mat-icon>lock</mat-icon>
         Mantener inhabilitado
@@ -39,7 +43,7 @@ export class InactiveMemberDialogComponent {
   data: { member: User } = inject(MAT_DIALOG_DATA);
   private ref = inject(MatDialogRef<InactiveMemberDialogComponent>);
 
-  close(action: 'keep' | 'delete'): void {
+  close(action: 'keep' | 'delete' | 'enable'): void {
     this.ref.close(action);
   }
 }

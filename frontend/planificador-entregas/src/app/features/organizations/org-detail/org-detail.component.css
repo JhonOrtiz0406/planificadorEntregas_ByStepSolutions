@@ -1,2 +1,4 @@
 .chip-active { background: #d1fae5 !important; color: #065f46 !important; }
 .chip-inactive { background: #fee2e2 !important; color: #991b1b !important; }
+
+.row-inactive { background: #fef9f0 !important; }

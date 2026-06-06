@@ -121,6 +121,14 @@ public class UserUseCase {
         userGateway.save(user);
     }
 
+    public void activate(UUID userId) {
+        User user = userGateway.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        user.setActive(true);
+        user.setUpdatedAt(LocalDateTime.now());
+        userGateway.save(user);
+    }
+
     public void delete(UUID userId) {
         userGateway.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));

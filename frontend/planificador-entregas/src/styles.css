@@ -228,6 +228,27 @@ body.dark-mode .chip-pay-paid         { background: rgba(6,78,59,0.35) !importan
 body.dark-mode .chip-active           { background: rgba(6,78,59,0.35) !important;    color: #6ee7b7 !important; }
 body.dark-mode .chip-inactive         { background: rgba(127,29,29,0.35) !important;  color: #fca5a5 !important; }
 
+/* ── Org detail dark mode ── */
+body.dark-mode .row-inactive { background: rgba(245,158,11,0.08) !important; }
+
+/* ── Mat dialogs dark mode ── */
+body.dark-mode .mat-mdc-dialog-surface,
+body.dark-mode .mdc-dialog__surface {
+  background: #252358 !important;
+  color: var(--text-primary) !important;
+}
+body.dark-mode .mat-mdc-dialog-surface p,
+body.dark-mode .mdc-dialog__surface p { color: var(--text-secondary) !important; }
+body.dark-mode .mat-mdc-dialog-surface input[type="text"] {
+  background: rgba(255,255,255,0.06) !important;
+  border-color: rgba(129,140,248,0.3) !important;
+  color: var(--text-primary) !important;
+}
+body.dark-mode .mat-mdc-dialog-surface .mdc-button--outlined {
+  border-color: rgba(129,140,248,0.4) !important;
+  color: var(--text-primary) !important;
+}
+
 /* ── Order detail ── */
 body.dark-mode .header-info h2 { color: var(--text-primary) !important; }
 body.dark-mode .header-info span { color: var(--text-secondary) !important; }

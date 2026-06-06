@@ -39,6 +39,10 @@ export class OrganizationService {
     return this.http.delete<void>(`${this.baseUrl}/${orgId}/members/${userId}`);
   }
 
+  reactivateMember(orgId: string, userId: string): Observable<void> {
+    return this.http.patch<void>(`${this.baseUrl}/${orgId}/members/${userId}/enable`, {});
+  }
+
   deleteMemberPermanently(orgId: string, userId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${orgId}/members/${userId}/permanent`);
   }

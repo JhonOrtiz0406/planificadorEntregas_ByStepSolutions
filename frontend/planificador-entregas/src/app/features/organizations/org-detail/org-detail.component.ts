@@ -32,9 +32,9 @@ import { InactiveMemberDialogComponent } from './inactive-member-dialog.componen
         <mat-icon [style.color]="data.iconColor || '#e53935'" style="font-size:32px;height:32px;width:32px">
           {{ data.icon || 'warning' }}
         </mat-icon>
-        <h3 style="margin:0;color:#1e1b4b;font-size:1.1rem;font-weight:700">{{ data.title }}</h3>
+        <h3 style="margin:0;color:var(--text-primary);font-size:1.1rem;font-weight:700">{{ data.title }}</h3>
       </div>
-      <p style="color:#4b5563;line-height:1.6;margin:0 0 12px">{{ data.message }}</p>
+      <p style="color:var(--text-secondary);line-height:1.6;margin:0 0 12px">{{ data.message }}</p>
       @if (data.warning) {
         <div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:12px 14px;margin-bottom:4px">
           <p style="margin:0;font-size:.85rem;color:#92400e;line-height:1.5">
@@ -70,8 +70,8 @@ export class ConfirmOrgDialogComponent {
       <div style="text-align:center;margin-bottom:16px">
         <mat-icon style="font-size:48px;width:48px;height:48px;color:#ef4444">delete_forever</mat-icon>
       </div>
-      <h3 style="margin:0 0 8px;color:#1e1b4b;text-align:center">Eliminar organización</h3>
-      <p style="color:#6b7280;font-size:.9rem;margin:0 0 16px">
+      <h3 style="margin:0 0 8px;color:var(--text-primary);text-align:center">Eliminar organización</h3>
+      <p style="color:var(--text-secondary);font-size:.9rem;margin:0 0 16px">
         Esta acción es <strong>irreversible</strong>. Se eliminarán todos los datos asociados.<br>
         Escribe <strong>{{ data.orgName }}</strong> para confirmar:
       </p>
@@ -159,16 +159,29 @@ export class OrgDetailComponent implements OnInit {
     });
   }
 
-  deactivateMember(userId: string): void {
-    if (!confirm('¿Inhabilitar a este miembro?')) return;
-    this.orgService.removeMember(this.org()!.id, userId).subscribe({
-      next: () => {
-        this.members.update(m => m.map(u => u.id === userId ? { ...u, active: false } : u));
-        this.snackBar.open('Miembro inhabilitado', 'Cerrar', { duration: 2000 });
-      },
-      error: (err) => {
-        this.snackBar.open(err.error?.message || 'Error al inhabilitar miembro', 'Cerrar', { duration: 3000 });
+  deactivateMember(member: User): void {
+    const ref = this.dialog.open(ConfirmOrgDialogComponent, {
+      width: '420px',
+      data: {
+        title: 'Inhabilitar miembro',
+        message: `¿Seguro que deseas inhabilitar a ${member.name || member.email}? No podrá iniciar sesión hasta que sea habilitado nuevamente.`,
+        confirmLabel: 'Inhabilitar',
+        confirmColor: 'warn',
+        icon: 'person_off',
+        iconColor: '#f59e0b'
       }
+    });
+    ref.afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      this.orgService.removeMember(this.org()!.id, member.id).subscribe({
+        next: () => {
+          this.members.update(m => m.map(u => u.id === member.id ? { ...u, active: false } : u));
+          this.snackBar.open('Miembro inhabilitado', 'Cerrar', { duration: 2000 });
+        },
+        error: (err) => {
+          this.snackBar.open(err.error?.message || 'Error al inhabilitar miembro', 'Cerrar', { duration: 3000 });
+        }
+      });
     });
   }
 
@@ -178,7 +191,17 @@ export class OrgDetailComponent implements OnInit {
       data: { member }
     });
     ref.afterClosed().subscribe(action => {
-      if (action === 'delete') {
+      if (action === 'enable') {
+        this.orgService.reactivateMember(this.org()!.id, member.id).subscribe({
+          next: () => {
+            this.members.update(m => m.map(u => u.id === member.id ? { ...u, active: true } : u));
+            this.snackBar.open('Miembro habilitado correctamente', 'Cerrar', { duration: 2000 });
+          },
+          error: (err) => {
+            this.snackBar.open(err.error?.message || 'Error al habilitar miembro', 'Cerrar', { duration: 3000 });
+          }
+        });
+      } else if (action === 'delete') {
         this.orgService.deleteMemberPermanently(this.org()!.id, member.id).subscribe({
           next: () => {
             this.members.update(m => m.filter(u => u.id !== member.id));
