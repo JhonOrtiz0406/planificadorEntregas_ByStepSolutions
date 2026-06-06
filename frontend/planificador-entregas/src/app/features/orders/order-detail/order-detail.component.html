@@ -144,19 +144,6 @@
 
               </div>
 
-              @if (isPartialPayment) {
-                <mat-form-field appearance="outline" class="full-w">
-                  <mat-label>Monto del abono</mat-label>
-                  <span matPrefix style="color:#6b7280;padding-right:4px">$&nbsp;</span>
-                  <input matInput type="text" inputmode="numeric"
-                         formControlName="paymentAmountDisplay"
-                         (input)="onPaymentAmountInput($event)"
-                         placeholder="0">
-                  <mat-icon matSuffix>payments</mat-icon>
-                  <mat-hint>Formato: 1.500.000</mat-hint>
-                </mat-form-field>
-              }
-
               <button mat-raised-button color="primary" type="button"
                       (click)="updateStatus()" [disabled]="updating()">
                 @if (updating()) {
@@ -171,7 +158,8 @@
     </div>
 
     <!-- Historial de Abonos -->
-    <mat-card class="payment-history-card">
+    <mat-card class="payment-history-card" #paymentHistory
+              [class.highlight-pulse]="highlightPayments()">
       <mat-card-header>
         <mat-card-title><mat-icon>history</mat-icon> Historial de Abonos</mat-card-title>
       </mat-card-header>
@@ -198,10 +186,16 @@
 
             <mat-form-field appearance="outline" style="flex:1;min-width:150px">
               <mat-label>Medio de pago</mat-label>
-              <mat-select [formControl]="paymentForm.controls.paymentMethod">
+              <mat-select [formControl]="paymentForm.controls.paymentMethod"
+                          panelClass="payment-method-panel">
                 <mat-option value="">Sin especificar</mat-option>
                 @for (m of paymentMethods; track m) {
-                  <mat-option [value]="m">{{ m }}</mat-option>
+                  <mat-option [value]="m">
+                    <mat-icon style="font-size:18px;width:18px;height:18px;margin-right:6px;vertical-align:middle">
+                      {{ paymentMethodIcon(m) }}
+                    </mat-icon>
+                    {{ m }}
+                  </mat-option>
                 }
               </mat-select>
             </mat-form-field>

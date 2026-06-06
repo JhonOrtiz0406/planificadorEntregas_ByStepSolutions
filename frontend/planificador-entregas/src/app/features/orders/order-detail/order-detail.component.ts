@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
@@ -53,6 +53,9 @@ export class OrderDetailComponent implements OnInit {
   loadingPayments = signal(false);
   addingPayment = signal(false);
   selectedPhoto = signal<string | null>(null);
+  highlightPayments = signal(false);
+
+  @ViewChild('paymentHistory') paymentHistoryRef?: ElementRef<HTMLElement>;
 
   paymentForm = this.fb.group({
     amount: [null as number | null],
@@ -111,7 +114,9 @@ export class OrderDetailComponent implements OnInit {
 
   private watchPaymentStatus(): void {
     this.statusForm.get('paymentStatus')?.valueChanges.subscribe(val => {
-      if (val === 'PAID') {
+      if (val === 'PARTIAL') {
+        this.goToPaymentHistory();
+      } else if (val === 'PAID') {
         const previousProgress = this.statusForm.get('progressStatus')?.value ?? null;
         const ref = this.dialog.open(ConfirmDeliveredDialogComponent, { width: '400px' });
         ref.afterClosed().subscribe(delivered => {
@@ -126,15 +131,18 @@ export class OrderDetailComponent implements OnInit {
     });
   }
 
-  onPaymentAmountInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    let raw = input.value.replace(/[^0-9]/g, '');
-    if (raw.length > 13) raw = raw.slice(0, 13);
-    const formatted = raw ? Number(raw).toLocaleString('es-CO') : '';
-    const numeric = raw ? Number(raw) : null;
-    this.statusForm.get('paymentAmountDisplay')?.setValue(formatted, { emitEvent: false });
-    this.statusForm.get('paymentAmount')?.setValue(numeric, { emitEvent: false });
-    input.value = formatted;
+  private goToPaymentHistory(): void {
+    // Defer to next tick so the element is rendered/visible
+    setTimeout(() => {
+      this.paymentHistoryRef?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      this.highlightPayments.set(true);
+      setTimeout(() => this.highlightPayments.set(false), 2400);
+    }, 50);
+    this.snackBar.open(
+      'Registra el abono en "Historial de Abonos" para dejar la trazabilidad',
+      'Entendido',
+      { duration: 5000, panelClass: ['snack-success'] }
+    );
   }
 
   updateStatus(): void {
@@ -144,8 +152,8 @@ export class OrderDetailComponent implements OnInit {
     const val = this.statusForm.value;
     this.orderService.updateStatus(order.id, {
       progressStatus: val.progressStatus as ProgressStatus,
-      paymentStatus: val.paymentStatus as PaymentStatus,
-      paymentAmount: val.paymentAmount || undefined
+      paymentStatus: val.paymentStatus as PaymentStatus
+      // paymentAmount intentionally omitted — el monto abonado proviene del Historial de Abonos
     }).subscribe({
       next: (updated) => {
         this.order.set(updated);
@@ -294,10 +302,6 @@ export class OrderDetailComponent implements OnInit {
 
   getPaymentLabel(s: string): string {
     return { 'UNPAID': 'No pagado', 'PARTIAL': 'Abono', 'PAID': 'Pagado' }[s] || s;
-  }
-
-  get isPartialPayment(): boolean {
-    return this.statusForm.get('paymentStatus')?.value === 'PARTIAL';
   }
 
   get totalPaid(): number {

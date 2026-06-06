@@ -482,6 +482,41 @@ mat-card .mat-mdc-form-field .mdc-notched-outline__trailing {
   color: #4f46e5 !important;
 }
 
+/* ── "Medio de pago" dropdown — fondo limpio (modo diurno) ── */
+.payment-method-panel.mat-mdc-select-panel {
+  background: linear-gradient(180deg, #ffffff 0%, #f8f7ff 100%) !important;
+  padding: 6px !important;
+  border: 1px solid rgba(79,70,229,0.12) !important;
+}
+.payment-method-panel .mat-mdc-option {
+  margin: 2px 0 !important;
+  color: #1e1b4b !important;
+}
+.payment-method-panel .mat-mdc-option mat-icon { color: #6366f1 !important; }
+.payment-method-panel .mat-mdc-option:hover:not(.mdc-list-item--selected) {
+  background: #eef0ff !important;
+}
+.payment-method-panel .mat-mdc-option.mdc-list-item--selected {
+  background: #e0e7ff !important;
+  color: #3730a3 !important;
+}
+.payment-method-panel .mat-mdc-option.mdc-list-item--selected mat-icon { color: #4f46e5 !important; }
+
+/* ── "Medio de pago" dropdown — modo nocturno ── */
+body.dark-mode .payment-method-panel.mat-mdc-select-panel {
+  background: linear-gradient(180deg, #2a2860 0%, #252358 100%) !important;
+  border-color: rgba(129,140,248,0.25) !important;
+}
+body.dark-mode .payment-method-panel .mat-mdc-option { color: #eceaff !important; }
+body.dark-mode .payment-method-panel .mat-mdc-option mat-icon { color: #a5b4fc !important; }
+body.dark-mode .payment-method-panel .mat-mdc-option:hover:not(.mdc-list-item--selected) {
+  background: rgba(129,140,248,0.18) !important;
+}
+body.dark-mode .payment-method-panel .mat-mdc-option.mdc-list-item--selected {
+  background: rgba(129,140,248,0.3) !important;
+  color: #ffffff !important;
+}
+
 /* ── Form field focus ring ── */
 .mat-mdc-form-field-appearance-outline.mat-focused .mdc-notched-outline__leading,
 .mat-mdc-form-field-appearance-outline.mat-focused .mdc-notched-outline__notch,
