@@ -12,8 +12,11 @@ public class UseCasesConfig {
     public OrderUseCase orderUseCase(OrderGateway orderGateway, ReminderGateway reminderGateway,
                                      tech.bystep.planificador.model.gateways.WhatsAppGateway whatsAppGateway,
                                      NotificationGateway notificationGateway,
-                                     tech.bystep.planificador.model.gateways.UserGateway userGateway) {
-        return new OrderUseCase(orderGateway, reminderGateway, whatsAppGateway, notificationGateway, userGateway);
+                                     tech.bystep.planificador.model.gateways.UserGateway userGateway,
+                                     tech.bystep.planificador.model.gateways.PaymentRecordGateway paymentRecordGateway,
+                                     tech.bystep.planificador.model.gateways.StorageGateway storageGateway) {
+        return new OrderUseCase(orderGateway, reminderGateway, whatsAppGateway, notificationGateway,
+                userGateway, paymentRecordGateway, storageGateway);
     }
 
     @Bean

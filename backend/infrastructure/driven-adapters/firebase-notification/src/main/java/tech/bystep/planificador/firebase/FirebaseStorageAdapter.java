@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import tech.bystep.planificador.model.gateways.StorageGateway;
 
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -45,5 +46,23 @@ public class FirebaseStorageAdapter implements StorageGateway {
         return "https://firebasestorage.googleapis.com/v0/b/"
                 + storageBucket + "/o/" + encodedName
                 + "?alt=media&token=" + downloadToken;
+    }
+
+    @Override
+    public void deleteFile(String fileUrl) {
+        if (fileUrl == null || fileUrl.isBlank()) return;
+        try {
+            // URL format: .../o/{encoded-path}?alt=media&token=...
+            int oIdx = fileUrl.indexOf("/o/");
+            if (oIdx == -1) { log.warn("Cannot parse Firebase URL for deletion: {}", fileUrl); return; }
+            String afterO = fileUrl.substring(oIdx + 3);
+            String encodedPath = afterO.contains("?") ? afterO.substring(0, afterO.indexOf("?")) : afterO;
+            String filePath = URLDecoder.decode(encodedPath, StandardCharsets.UTF_8);
+            Storage storage = StorageClient.getInstance().bucket(storageBucket).getStorage();
+            storage.delete(BlobId.of(storageBucket, filePath));
+            log.info("Deleted file from Firebase Storage: {}", filePath);
+        } catch (Exception e) {
+            log.error("Failed to delete file from Firebase Storage: {} — {}", fileUrl, e.getMessage());
+        }
     }
 }

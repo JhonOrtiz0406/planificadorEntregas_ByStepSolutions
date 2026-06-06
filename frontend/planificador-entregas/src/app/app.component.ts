@@ -73,7 +73,8 @@ export class AppComponent implements OnInit {
     const labels: Record<string, string> = {
       'PLATFORM_ADMIN': 'Administrador de Plataforma',
       'ORG_ADMIN': 'Administrador',
-      'ORG_WORKER': 'Colaborador'
+      'ORG_EMPLOYEE': 'Empleado',
+      'ORG_DELIVERY': 'Repartidor'
     };
     return role ? (labels[role] ?? role) : '';
   }

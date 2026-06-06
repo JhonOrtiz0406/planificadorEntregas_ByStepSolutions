@@ -31,34 +31,55 @@
             <mat-icon matSuffix>notes</mat-icon>
           </mat-form-field>
 
-          <!-- Photo Upload -->
+          <!-- Photo Upload — Galería hasta 3 fotos -->
           <div class="photo-section">
             <label class="photo-label">
               <mat-icon>photo_library</mat-icon>
-              Foto del producto
+              Fotos del producto
+              <span style="font-size:.8rem;font-weight:400;color:var(--text-secondary);margin-left:6px">
+                ({{ photoUrls().length }}/{{ MAX_PHOTOS }})
+              </span>
             </label>
-            <div class="photo-actions">
-              <label class="upload-btn" for="fileInput">
-                <mat-icon>collections</mat-icon>
-                Galería
-                <input id="fileInput" type="file" accept="image/*" (change)="onFileSelected($event)" hidden>
-              </label>
-              <label class="upload-btn camera-btn" for="cameraInput">
-                <mat-icon>photo_camera</mat-icon>
-                Cámara
-                <input id="cameraInput" type="file" accept="image/*" capture="environment"
-                       (change)="onCameraCapture($event)" hidden>
-              </label>
-            </div>
+
+            <!-- Galería de fotos subidas -->
+            @if (photoUrls().length > 0) {
+              <div class="photo-gallery">
+                @for (url of photoUrls(); track url) {
+                  <div class="photo-thumb">
+                    <img [src]="url" alt="Foto del producto">
+                    <button type="button" class="photo-delete-btn" (click)="removeLocalPhoto(url)"
+                            title="Eliminar foto">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (canAddPhoto()) {
+              <div class="photo-actions">
+                <label class="upload-btn" for="fileInput">
+                  <mat-icon>collections</mat-icon>
+                  Galería
+                  <input id="fileInput" type="file" accept="image/*" (change)="onFileSelected($event)" hidden>
+                </label>
+                <label class="upload-btn camera-btn" for="cameraInput">
+                  <mat-icon>photo_camera</mat-icon>
+                  Cámara
+                  <input id="cameraInput" type="file" accept="image/*" capture="environment"
+                         (change)="onCameraCapture($event)" hidden>
+                </label>
+              </div>
+            } @else {
+              <p style="font-size:.82rem;color:var(--text-secondary);margin:8px 0 0">
+                Límite de {{ MAX_PHOTOS }} fotos alcanzado. Elimina una para agregar otra.
+              </p>
+            }
+
             @if (uploadingPhoto()) {
               <div class="upload-progress">
                 <mat-spinner diameter="22"></mat-spinner>
                 Subiendo imagen...
-              </div>
-            }
-            @if (previewUrl()) {
-              <div class="photo-preview">
-                <img [src]="previewUrl()" alt="Vista previa" class="preview-img">
               </div>
             }
           </div>

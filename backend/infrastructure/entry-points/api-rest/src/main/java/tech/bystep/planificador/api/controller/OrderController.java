@@ -7,11 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import tech.bystep.planificador.api.dto.request.AddPaymentRecordRequest;
 import tech.bystep.planificador.api.dto.request.CreateOrderRequest;
 import tech.bystep.planificador.api.dto.request.UpdateOrderRequest;
 import tech.bystep.planificador.api.dto.request.UpdateOrderStatusRequest;
 import tech.bystep.planificador.api.dto.response.ApiResponse;
 import tech.bystep.planificador.api.dto.response.OrderResponse;
+import tech.bystep.planificador.api.dto.response.PaymentRecordResponse;
+import tech.bystep.planificador.model.PaymentRecord;
 import tech.bystep.planificador.model.Order;
 import tech.bystep.planificador.security.UserPrincipal;
 import tech.bystep.planificador.usecase.OrderUseCase;
@@ -86,6 +89,7 @@ public class OrderController {
                 .clientAddress(request.getClientAddress())
                 .description(request.getDescription())
                 .photoUrl(request.getPhotoUrl())
+                .photoUrls(request.getPhotoUrls() != null ? request.getPhotoUrls() : new java.util.ArrayList<>())
                 .deliveryDate(request.getDeliveryDate())
                 .totalPrice(request.getTotalPrice())
                 .organizationId(orgId)
@@ -109,6 +113,7 @@ public class OrderController {
                 .clientAddress(request.getClientAddress())
                 .description(request.getDescription())
                 .photoUrl(request.getPhotoUrl())
+                .photoUrls(request.getPhotoUrls())
                 .deliveryDate(request.getDeliveryDate())
                 .totalPrice(request.getTotalPrice())
                 .build();
@@ -136,6 +141,55 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.ok("Status updated", toResponse(order)));
     }
 
+    @DeleteMapping("/{id}/photos")
+    @PreAuthorize("hasAnyRole('ORG_ADMIN','ORG_EMPLOYEE')")
+    public ResponseEntity<ApiResponse<OrderResponse>> deletePhoto(
+            @PathVariable("id") UUID id,
+            @RequestBody java.util.Map<String, String> body,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        UUID orgId = UUID.fromString(principal.getOrganizationId());
+        String photoUrl = body.get("url");
+        if (photoUrl == null || photoUrl.isBlank()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("url is required"));
+        }
+        Order updated = orderUseCase.removePhoto(id, orgId, photoUrl);
+        return ResponseEntity.ok(ApiResponse.ok("Photo deleted", toResponse(updated)));
+    }
+
+    @PostMapping("/{id}/payments")
+    @PreAuthorize("hasAnyRole('ORG_ADMIN','ORG_EMPLOYEE')")
+    public ResponseEntity<ApiResponse<PaymentRecordResponse>> addPaymentRecord(
+            @PathVariable("id") UUID id,
+            @Valid @RequestBody AddPaymentRecordRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        UUID orgId = UUID.fromString(principal.getOrganizationId());
+        PaymentRecord record = orderUseCase.addPaymentRecord(id, orgId, request.getAmount(),
+                request.getPaymentDate(), request.getPaymentMethod(), request.getNotes());
+        return ResponseEntity.status(201).body(ApiResponse.ok("Payment record added", toPaymentResponse(record)));
+    }
+
+    @GetMapping("/{id}/payments")
+    @PreAuthorize("hasAnyRole('ORG_ADMIN','ORG_EMPLOYEE','ORG_DELIVERY')")
+    public ResponseEntity<ApiResponse<List<PaymentRecordResponse>>> getPaymentRecords(
+            @PathVariable("id") UUID id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        UUID orgId = UUID.fromString(principal.getOrganizationId());
+        List<PaymentRecordResponse> records = orderUseCase.getPaymentRecords(id, orgId)
+                .stream().map(this::toPaymentResponse).collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.ok(records));
+    }
+
+    @DeleteMapping("/{id}/payments/{recordId}")
+    @PreAuthorize("hasAnyRole('ORG_ADMIN','ORG_EMPLOYEE')")
+    public ResponseEntity<ApiResponse<Void>> deletePaymentRecord(
+            @PathVariable("id") UUID id,
+            @PathVariable("recordId") UUID recordId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        UUID orgId = UUID.fromString(principal.getOrganizationId());
+        orderUseCase.deletePaymentRecord(id, orgId, recordId);
+        return ResponseEntity.ok(ApiResponse.ok("Payment record deleted", null));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ORG_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteOrder(
@@ -150,17 +204,28 @@ public class OrderController {
         BigDecimal balance = BigDecimal.ZERO;
         if (order.getTotalPrice() != null && order.getPaymentAmount() != null) {
             balance = order.getTotalPrice().subtract(order.getPaymentAmount());
+            if (balance.compareTo(BigDecimal.ZERO) < 0) balance = BigDecimal.ZERO;
         }
         return OrderResponse.builder()
                 .id(order.getId()).orderNumber(order.getOrderNumber()).productName(order.getProductName())
                 .clientName(order.getClientName()).clientPhone(order.getClientPhone())
                 .clientAddress(order.getClientAddress()).description(order.getDescription())
-                .photoUrl(order.getPhotoUrl()).deliveryDate(order.getDeliveryDate())
+                .photoUrl(order.getPhotoUrl())
+                .photoUrls(order.getPhotoUrls() != null ? order.getPhotoUrls() : new java.util.ArrayList<>())
+                .deliveryDate(order.getDeliveryDate())
                 .progressStatus(order.getProgressStatus()).paymentStatus(order.getPaymentStatus())
                 .paymentAmount(order.getPaymentAmount()).totalPrice(order.getTotalPrice())
                 .balanceDue(balance).organizationId(order.getOrganizationId())
                 .daysUntilDelivery(order.daysUntilDelivery()).overdue(order.isOverdue())
                 .createdAt(order.getCreatedAt()).updatedAt(order.getUpdatedAt())
+                .build();
+    }
+
+    private PaymentRecordResponse toPaymentResponse(PaymentRecord r) {
+        return PaymentRecordResponse.builder()
+                .id(r.getId()).orderId(r.getOrderId()).amount(r.getAmount())
+                .paymentDate(r.getPaymentDate()).paymentMethod(r.getPaymentMethod())
+                .notes(r.getNotes()).createdAt(r.getCreatedAt())
                 .build();
     }
 }

@@ -38,6 +38,8 @@ export class OrderFormComponent implements OnInit {
   orderId: string | null = null;
   minDate = new Date();
   previewUrl = signal<string | null>(null);
+  photoUrls = signal<string[]>([]);
+  readonly MAX_PHOTOS = 3;
 
   ngOnInit(): void {
     this.initForm();
@@ -55,7 +57,6 @@ export class OrderFormComponent implements OnInit {
       clientPhone: ['', [Validators.pattern('^[0-9+\\-\\s()]{7,15}$')]],
       clientAddress: [''],
       description: [''],
-      photoUrl: [''],
       deliveryDate: [null, Validators.required],
       totalPriceDisplay: [''],
     });
@@ -85,11 +86,17 @@ export class OrderFormComponent implements OnInit {
           ? Number(order.totalPrice).toLocaleString('es-CO')
           : '';
         this.form.patchValue({
-          ...order,
+          productName: order.productName,
+          clientName: order.clientName,
+          clientPhone: order.clientPhone,
+          clientAddress: order.clientAddress,
+          description: order.description,
           deliveryDate: new Date(order.deliveryDate + 'T00:00:00'),
           totalPriceDisplay: priceDisplay
         });
-        if (order.photoUrl) this.previewUrl.set(order.photoUrl);
+        const photos = order.photoUrls?.length ? order.photoUrls
+          : order.photoUrl ? [order.photoUrl] : [];
+        this.photoUrls.set(photos);
         this.loading.set(false);
       },
       error: () => {
@@ -101,30 +108,33 @@ export class OrderFormComponent implements OnInit {
 
   onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) {
-      this.processFile(file);
-    }
+    if (file) this.processFile(file);
+    (event.target as HTMLInputElement).value = '';
   }
 
   onCameraCapture(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) {
-      this.processFile(file);
-    }
+    if (file) this.processFile(file);
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  canAddPhoto(): boolean {
+    return this.photoUrls().length < this.MAX_PHOTOS;
+  }
+
+  removeLocalPhoto(url: string): void {
+    this.photoUrls.update(photos => photos.filter(p => p !== url));
   }
 
   private processFile(file: File): void {
-    const reader = new FileReader();
-    reader.onload = (e) => this.previewUrl.set(e.target?.result as string);
-    reader.readAsDataURL(file);
-    this.uploadPhoto(file);
-  }
-
-  private uploadPhoto(file: File): void {
+    if (!this.canAddPhoto()) {
+      this.snackBar.open(`Máximo ${this.MAX_PHOTOS} fotos por pedido`, 'Cerrar', { duration: 3000 });
+      return;
+    }
     this.uploadingPhoto.set(true);
     this.orderService.uploadPhoto(file).subscribe({
       next: ({ url }) => {
-        this.form.patchValue({ photoUrl: url });
+        this.photoUrls.update(photos => [...photos, url]);
         this.uploadingPhoto.set(false);
         this.snackBar.open('Foto subida correctamente', 'Cerrar', { duration: 2000 });
       },
@@ -145,7 +155,14 @@ export class OrderFormComponent implements OnInit {
       : value.deliveryDate;
 
     const { totalPriceDisplay, ...rest } = value;
-    const request = { ...rest, deliveryDate, totalPrice: this.parsePriceValue() };
+    const photos = this.photoUrls();
+    const request = {
+      ...rest,
+      deliveryDate,
+      totalPrice: this.parsePriceValue(),
+      photoUrls: photos,
+      photoUrl: photos[0] ?? null
+    };
 
     const operation = this.editMode()
       ? this.orderService.update(this.orderId!, request)

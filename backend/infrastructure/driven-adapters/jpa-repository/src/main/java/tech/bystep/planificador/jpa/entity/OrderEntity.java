@@ -7,12 +7,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import tech.bystep.planificador.jpa.converter.StringListConverter;
 import tech.bystep.planificador.model.PaymentStatus;
 import tech.bystep.planificador.model.ProgressStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -47,6 +50,10 @@ public class OrderEntity {
 
     @Column(name = "photo_url")
     private String photoUrl;
+
+    @Convert(converter = StringListConverter.class)
+    @Column(name = "photo_urls", columnDefinition = "TEXT")
+    private List<String> photoUrls = new ArrayList<>();
 
     @Column(name = "delivery_date", nullable = false)
     private LocalDate deliveryDate;

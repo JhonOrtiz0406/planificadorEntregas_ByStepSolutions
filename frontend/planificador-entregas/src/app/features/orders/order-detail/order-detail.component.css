@@ -305,6 +305,205 @@
   padding-top: 8px;
 }
 
+/* ── Photo gallery inside product card ── */
+.photo-thumbs-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.photo-thumb-sm {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid rgba(79,70,229,0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: zoom-in;
+}
+
+.photo-thumb-sm:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+
+.photo-delete-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Lightbox ── */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  animation: fadeIn 0.2s ease;
+}
+
+.lightbox-overlay img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  cursor: default;
+}
+
+/* ── Payment history card ── */
+.payment-history-card {
+  grid-column: 1 / -1;
+}
+
+.payment-history-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #4f46e5 !important;
+}
+
+.payment-form-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f7ff 0%, #f0f2ff 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(79,70,229,0.12);
+}
+
+.payment-records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.payment-record-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  transition: box-shadow 0.2s;
+}
+
+.payment-record-item:hover {
+  box-shadow: 0 2px 12px rgba(79,70,229,0.08);
+}
+
+.payment-record-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.payment-record-icon mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: #4f46e5;
+}
+
+.payment-record-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.payment-record-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.payment-amount {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #065f46;
+}
+
+.payment-date {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.payment-method-chip {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+
+.payment-notes {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.payment-total-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 2px solid #e0e7ff;
+  margin-top: 4px;
+  font-size: 1rem;
+  color: #374151;
+}
+
+.payment-total-row strong {
+  font-size: 1.15rem;
+  color: #065f46;
+}
+
+.empty-payment {
+  text-align: center;
+  padding: 32px;
+  color: #9ca3af;
+}
+
+.empty-payment mat-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  opacity: 0.35;
+  display: block;
+  margin: 0 auto 8px;
+}
+
+/* ── Dark mode overrides ── */
+body.dark-mode .payment-record-item { background: rgba(255,255,255,0.04); border-color: var(--border); }
+body.dark-mode .payment-record-icon { background: rgba(129,140,248,0.15); }
+body.dark-mode .payment-amount { color: #6ee7b7; }
+body.dark-mode .payment-date { color: var(--text-secondary); }
+body.dark-mode .payment-method-chip { background: rgba(129,140,248,0.2); color: #a5b4fc; }
+body.dark-mode .payment-notes { color: var(--text-secondary); }
+body.dark-mode .payment-total-row { border-top-color: var(--border); color: var(--text-primary); }
+body.dark-mode .payment-total-row strong { color: #6ee7b7; }
+body.dark-mode .payment-form-row { background: rgba(129,140,248,0.07); border-color: rgba(129,140,248,0.15); }
+
 @media (max-width: 768px) {
   .product-card-body {
     flex-direction: column !important;

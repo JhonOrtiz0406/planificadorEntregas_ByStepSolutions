@@ -10,6 +10,8 @@ import tech.bystep.planificador.model.ProgressStatus;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -25,6 +27,7 @@ public class OrderResponse {
     private String clientAddress;
     private String description;
     private String photoUrl;
+    private List<String> photoUrls = new ArrayList<>();
     private LocalDate deliveryDate;
     private ProgressStatus progressStatus;
     private PaymentStatus paymentStatus;
