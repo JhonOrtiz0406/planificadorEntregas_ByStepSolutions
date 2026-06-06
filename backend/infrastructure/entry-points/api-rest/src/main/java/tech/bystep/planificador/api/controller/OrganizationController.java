@@ -13,6 +13,7 @@ import tech.bystep.planificador.model.Invitation;
 import tech.bystep.planificador.model.Organization;
 import tech.bystep.planificador.model.User;
 import tech.bystep.planificador.security.UserPrincipal;
+import tech.bystep.planificador.model.gateways.EmailGateway;
 import tech.bystep.planificador.usecase.InvitationUseCase;
 import tech.bystep.planificador.usecase.OrganizationUseCase;
 import tech.bystep.planificador.usecase.UserUseCase;
@@ -28,6 +29,7 @@ public class OrganizationController {
     private final OrganizationUseCase organizationUseCase;
     private final UserUseCase userUseCase;
     private final InvitationUseCase invitationUseCase;
+    private final EmailGateway emailGateway;
 
     @GetMapping
     @PreAuthorize("hasRole('PLATFORM_ADMIN')")
@@ -133,6 +135,8 @@ public class OrganizationController {
             }
         }
         userUseCase.deactivate(userId);
+        String orgName = organizationUseCase.findById(id).map(o -> o.getName()).orElse("tu organización");
+        emailGateway.sendMemberDeactivated(target.getEmail(), target.getName(), orgName);
         return ResponseEntity.ok(ApiResponse.ok("Member deactivated", null));
     }
 
@@ -154,6 +158,8 @@ public class OrganizationController {
             }
         }
         userUseCase.activate(userId);
+        String orgName = organizationUseCase.findById(id).map(o -> o.getName()).orElse("tu organización");
+        emailGateway.sendMemberReactivated(target.getEmail(), target.getName(), orgName);
         return ResponseEntity.ok(ApiResponse.ok("Member enabled", null));
     }
 
@@ -174,7 +180,11 @@ public class OrganizationController {
                 return ResponseEntity.status(403).body(ApiResponse.error("Cannot delete admin accounts"));
             }
         }
+        String orgName = organizationUseCase.findById(id).map(o -> o.getName()).orElse("tu organización");
+        String email = target.getEmail();
+        String name  = target.getName();
         userUseCase.delete(userId);
+        emailGateway.sendMemberDeleted(email, name, orgName);
         return ResponseEntity.ok(ApiResponse.ok("Member permanently deleted", null));
     }
 

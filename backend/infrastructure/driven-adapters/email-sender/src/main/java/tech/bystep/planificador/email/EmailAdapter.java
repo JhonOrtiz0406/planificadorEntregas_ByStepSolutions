@@ -183,6 +183,112 @@ public class EmailAdapter implements EmailGateway {
         sendHtml(supportEmail, subject, body);
     }
 
+    @Override
+    public void sendMemberDeactivated(String to, String memberName, String orgName) {
+        if (fromAddress.isBlank()) { log.warn("Skipping member-deactivated email to {}", to); return; }
+        sendHtml(to,
+                "Tu cuenta ha sido inhabilitada – DeliveryPlanner",
+                buildMemberStatusHtml(memberName, orgName, false, false));
+    }
+
+    @Override
+    public void sendMemberReactivated(String to, String memberName, String orgName) {
+        if (fromAddress.isBlank()) { log.warn("Skipping member-reactivated email to {}", to); return; }
+        sendHtml(to,
+                "Tu cuenta ha sido habilitada nuevamente – DeliveryPlanner",
+                buildMemberStatusHtml(memberName, orgName, true, false));
+    }
+
+    @Override
+    public void sendMemberDeleted(String to, String memberName, String orgName) {
+        if (fromAddress.isBlank()) { log.warn("Skipping member-deleted email to {}", to); return; }
+        sendHtml(to,
+                "Has sido eliminado de " + orgName + " – DeliveryPlanner",
+                buildMemberStatusHtml(memberName, orgName, false, true));
+    }
+
+    private String buildMemberStatusHtml(String memberName, String orgName,
+                                         boolean reactivated, boolean deleted) {
+        String headerColor = reactivated ? "linear-gradient(135deg,#16a34a,#15803d)"
+                           : deleted     ? "linear-gradient(135deg,#dc2626,#991b1b)"
+                           :               "linear-gradient(135deg,#d97706,#b45309)";
+        String emoji   = reactivated ? "✅" : deleted ? "🚫" : "⚠️";
+        String title   = reactivated ? "Tu cuenta ha sido habilitada"
+                       : deleted     ? "Has sido eliminado de la organización"
+                       :               "Tu cuenta ha sido inhabilitada";
+        String body    = reactivated
+                ? "Nos complace informarte que tu cuenta en la organización <strong>%s</strong> ha sido <strong>habilitada nuevamente</strong>. Ya puedes iniciar sesión en DeliveryPlanner con normalidad."
+                : deleted
+                ? "Te informamos que has sido <strong>eliminado permanentemente</strong> de la organización <strong>%s</strong> en DeliveryPlanner. Tu acceso ha sido revocado de forma definitiva."
+                : "Te informamos que tu cuenta en la organización <strong>%s</strong> ha sido <strong>inhabilitada</strong>. No podrás iniciar sesión hasta que un administrador reactive tu acceso.";
+
+        String name = esc(memberName != null ? memberName : "");
+        String org  = esc(orgName);
+        String greeting = name.isBlank() ? "Hola," : "Hola, <strong>" + name + "</strong>,";
+
+        return """
+                <!DOCTYPE html>
+                <html lang="es">
+                <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+                <body style="margin:0;padding:0;background:#f0f2ff;font-family:'Inter','Segoe UI',Arial,sans-serif">
+                  <table width="100%%" cellpadding="0" cellspacing="0" style="padding:40px 0">
+                    <tr><td align="center">
+                      <table width="560" cellpadding="0" cellspacing="0"
+                             style="background:#fff;border-radius:16px;overflow:hidden;
+                                    box-shadow:0 4px 24px rgba(79,70,229,.12)">
+                        <tr>
+                          <td style="background:%s;padding:36px 40px;text-align:center">
+                            <h1 style="margin:0;color:#fff;font-size:1.6rem;font-weight:700;letter-spacing:-.5px">
+                              📦 DeliveryPlanner
+                            </h1>
+                            <p style="margin:8px 0 0;color:rgba(255,255,255,.75);font-size:.9rem">
+                              por ByStep Solutions
+                            </p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:40px">
+                            <div style="text-align:center;margin-bottom:24px;font-size:3rem">%s</div>
+                            <h2 style="margin:0 0 16px;color:#1e1b4b;font-size:1.25rem;font-weight:700;text-align:center">
+                              %s
+                            </h2>
+                            <p style="margin:0 0 16px;color:#4b5563;line-height:1.6">
+                              %s
+                            </p>
+                            <p style="margin:0 0 24px;color:#4b5563;line-height:1.6">
+                              %s
+                            </p>
+                            <p style="margin:0 0 24px;color:#4b5563;line-height:1.6">
+                              Si tienes dudas, contacta al administrador de tu organización o escríbenos a
+                              <a href="mailto:soporte@bystepsolutions.tech"
+                                 style="color:#4f46e5;text-decoration:none">soporte@bystepsolutions.tech</a>.
+                            </p>
+                            <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0">
+                            <p style="margin:0;color:#9ca3af;font-size:.8rem">
+                              Este mensaje es generado automáticamente por DeliveryPlanner.
+                            </p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="background:#f9fafb;padding:20px 40px;text-align:center;
+                                     border-top:1px solid #e5e7eb">
+                            <p style="margin:0;color:#9ca3af;font-size:.8rem">
+                              © 2025
+                              <a href="https://www.bystepsolutions.tech/" style="color:#4f46e5;text-decoration:none">
+                                ByStep Solutions S.A.S.
+                              </a>
+                              – Todos los derechos reservados
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td></tr>
+                  </table>
+                </body>
+                </html>
+                """.formatted(headerColor, emoji, title, greeting, body.formatted(org));
+    }
+
     private String buildSupportContactHtml(String userName, String userEmail, String phone,
                                            String organizationName, String message) {
         String org = organizationName != null && !organizationName.isBlank()
