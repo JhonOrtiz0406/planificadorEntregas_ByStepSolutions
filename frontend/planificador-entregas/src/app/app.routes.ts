@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, roleGuard } from './core/guards/auth.guard';
+import { authGuard, roleGuard, categoryGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -50,6 +50,30 @@ export const routes: Routes = [
         path: ':id/edit',
         canActivate: [roleGuard('ORG_ADMIN')],
         loadComponent: () => import('./features/orders/order-form/order-form.component').then(m => m.OrderFormComponent)
+      }
+    ]
+  },
+  {
+    path: 'repairs',
+    canActivate: [authGuard, roleGuard('ORG_ADMIN', 'ORG_EMPLOYEE'), categoryGuard('JEWELRY')],
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./features/repairs/repair-list/repair-list.component').then(m => m.RepairListComponent)
+      },
+      {
+        path: 'new',
+        canActivate: [roleGuard('ORG_ADMIN', 'ORG_EMPLOYEE')],
+        loadComponent: () => import('./features/repairs/repair-form/repair-form.component').then(m => m.RepairFormComponent)
+      },
+      {
+        path: ':id',
+        loadComponent: () => import('./features/repairs/repair-detail/repair-detail.component').then(m => m.RepairDetailComponent)
+      },
+      {
+        path: ':id/edit',
+        canActivate: [roleGuard('ORG_ADMIN')],
+        loadComponent: () => import('./features/repairs/repair-form/repair-form.component').then(m => m.RepairFormComponent)
       }
     ]
   },

@@ -49,4 +49,12 @@ public class UseCasesConfig {
             tech.bystep.planificador.model.gateways.CategoryStatusGateway categoryStatusGateway) {
         return new CategoryStatusUseCase(categoryStatusGateway);
     }
+
+    @Bean
+    public RepairUseCase repairUseCase(RepairGateway repairGateway,
+                                       tech.bystep.planificador.model.gateways.RepairPaymentGateway repairPaymentGateway,
+                                       OrganizationGateway organizationGateway,
+                                       tech.bystep.planificador.model.gateways.StorageGateway storageGateway) {
+        return new RepairUseCase(repairGateway, repairPaymentGateway, organizationGateway, storageGateway);
+    }
 }

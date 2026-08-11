@@ -89,6 +89,9 @@ export class AppComponent implements OnInit {
     } else {
       items.push({ label: 'Calendario', icon: 'calendar_today', route: '/dashboard' });
       items.push({ label: 'Pedidos', icon: 'inventory_2', route: '/orders' });
+      if (user.organizationCategory === 'JEWELRY' && user.role !== 'ORG_DELIVERY') {
+        items.push({ label: 'Arreglos', icon: 'build', route: '/repairs' });
+      }
       if (user.role === 'ORG_ADMIN') {
         const orgRoute = user.organizationId ? `/organizations/${user.organizationId}` : '/organizations';
         items.push({ label: 'Mi Equipo', icon: 'group', route: orgRoute });

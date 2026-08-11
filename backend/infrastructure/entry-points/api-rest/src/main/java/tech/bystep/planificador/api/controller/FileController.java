@@ -25,14 +25,19 @@ public class FileController {
     @PostMapping("/upload")
     @PreAuthorize("hasAnyRole('ORG_ADMIN','ORG_EMPLOYEE')")
     public ResponseEntity<ApiResponse<Map<String, String>>> uploadFile(
-            @RequestParam("file") MultipartFile file) throws IOException {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "folder", defaultValue = "orders") String folder) throws IOException {
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Solo se permiten archivos de imagen"));
+        }
         String ext = "";
         String original = file.getOriginalFilename();
         if (original != null && original.contains(".")) {
             ext = original.substring(original.lastIndexOf("."));
         }
-        String fileName = "orders/" + UUID.randomUUID() + ext;
-        String url = storageGateway.uploadFile(fileName, file.getContentType(), file.getBytes());
+        String fileName = folder + "/" + UUID.randomUUID() + ext;
+        String url = storageGateway.uploadFile(fileName, contentType, file.getBytes());
         return ResponseEntity.ok(ApiResponse.ok(Map.of("url", url)));
     }
 
