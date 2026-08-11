@@ -1,0 +1,256 @@
+@let r = repair();
+@if (loading()) {
+  <div class="loading-center"><mat-spinner diameter="48"></mat-spinner></div>
+} @else if (r) {
+  <div class="detail-container">
+    <!-- Header -->
+    <div class="detail-header">
+      <button mat-icon-button routerLink="/repairs"><mat-icon>arrow_back</mat-icon></button>
+      <div class="header-info">
+        <h2>{{ r.clientFirstName }} {{ r.clientLastName }}</h2>
+        <span>{{ r.itemDescription }}</span>
+      </div>
+      <span class="header-spacer"></span>
+      @if (authService.canManageOrders()) {
+        <button mat-icon-button [routerLink]="['/repairs', r.id, 'edit']" color="primary">
+          <mat-icon>edit</mat-icon>
+        </button>
+      }
+      @if (authService.canDeleteOrders()) {
+        <button mat-icon-button color="warn" (click)="deleteRepair()">
+          <mat-icon>delete</mat-icon>
+        </button>
+      }
+    </div>
+
+    <div class="detail-grid">
+
+      <!-- Artículo: imagen + info -->
+      <mat-card class="info-card product-card">
+        <mat-card-content class="product-card-body">
+          @if (r.photoUrls && r.photoUrls.length > 0) {
+            <div class="product-photo-panel">
+              <img [src]="r.photoUrls[0]" alt="Foto del artículo" class="product-photo"
+                   (click)="openPhoto(r.photoUrls[0])" style="cursor:pointer">
+              @if (r.photoUrls.length > 1) {
+                <div class="photo-thumbs-row">
+                  @for (url of r.photoUrls.slice(1); track url) {
+                    <img [src]="url" class="photo-thumb-sm" (click)="openPhoto(url)" style="cursor:pointer">
+                  }
+                </div>
+              }
+              @if (authService.canManageOrders() && !deletingPhoto()) {
+                <div class="photo-delete-row">
+                  @for (url of r.photoUrls; track url) {
+                    <button mat-icon-button color="warn" (click)="deletePhoto(url)"
+                            title="Eliminar foto" style="background:rgba(239,68,68,0.1)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          }
+          <div class="product-info-panel">
+            <div class="card-section-title">
+              <mat-icon>build</mat-icon> Artículo
+            </div>
+            <div class="info-row"><mat-icon>diamond</mat-icon><span>{{ r.itemDescription }}</span></div>
+            <div class="info-row"><mat-icon>notes</mat-icon><span>{{ r.repairDescription }}</span></div>
+            <div class="info-row"><mat-icon>event</mat-icon>
+              <span>Ingreso: <strong>{{ r.entryDate | date:'dd/MM/yyyy' }}</strong></span>
+            </div>
+            <div class="info-row"><mat-icon>event_available</mat-icon>
+              @if (r.deliveryDate) {
+                <span>Entrega: <strong>{{ r.deliveryDate | date:'dd/MM/yyyy' }}</strong></span>
+              } @else {
+                <span class="days-info">Fecha de entrega sin definir</span>
+              }
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Cliente -->
+      <mat-card class="info-card">
+        <mat-card-header><mat-card-title><mat-icon>person</mat-icon> Cliente</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div class="info-row"><mat-icon>person</mat-icon><span>{{ r.clientFirstName }} {{ r.clientLastName }}</span></div>
+          <div class="info-row">
+            <mat-icon>phone</mat-icon>
+            <a [href]="'tel:' + r.clientPhone">{{ r.clientPhone }}</a>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Pago -->
+      <mat-card class="info-card">
+        <mat-card-header><mat-card-title><mat-icon>payments</mat-icon> Pago</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div class="info-row"><mat-icon>attach_money</mat-icon><span>Total: <strong>{{ r.totalPrice | currency:'COP':'symbol':'1.0-0' }}</strong></span></div>
+          <div class="info-row"><mat-icon>account_balance_wallet</mat-icon><span>Abonado: {{ (r.paymentAmount ?? 0) | currency:'COP':'symbol':'1.0-0' }}</span></div>
+          @if ((r.balanceDue ?? 0) > 0) {
+            <div class="info-row balance-due"><mat-icon>warning</mat-icon><span>Saldo: <strong>{{ r.balanceDue | currency:'COP':'symbol':'1.0-0' }}</strong></span></div>
+          }
+          <div class="info-row">
+            <mat-icon>info</mat-icon>
+            <mat-chip [class]="'chip-pay-' + r.paymentStatus.toLowerCase()">{{ getPaymentLabel(r.paymentStatus) }}</mat-chip>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Actualizar Estado -->
+      @if (authService.canUpdateStatus()) {
+        <mat-card class="status-card">
+          <mat-card-header><mat-card-title><mat-icon>update</mat-icon> Actualizar Estado</mat-card-title></mat-card-header>
+          <mat-card-content>
+            <form [formGroup]="statusForm" class="status-form">
+              <div class="radio-group-block">
+                <div class="radio-group-label">
+                  <mat-icon>flag</mat-icon>
+                  Estado del arreglo
+                </div>
+                <mat-radio-group formControlName="repairStatus" class="radio-list">
+                  @for (opt of statusOptions; track opt.value) {
+                    <mat-radio-button [value]="opt.value" class="status-radio">
+                      {{ opt.label }}
+                    </mat-radio-button>
+                  }
+                </mat-radio-group>
+              </div>
+
+              <button mat-raised-button color="primary" type="button"
+                      (click)="updateStatus()" [disabled]="updating()">
+                @if (updating()) {
+                  <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+                }
+                Guardar Estado
+              </button>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+
+    <!-- Historial de Abonos -->
+    <mat-card class="payment-history-card">
+      <mat-card-header>
+        <mat-card-title><mat-icon>history</mat-icon> Historial de Abonos</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+
+        @if (authService.canUpdateStatus()) {
+          <div class="payment-form-row">
+            <mat-form-field appearance="outline" style="flex:1;min-width:120px">
+              <mat-label>Monto</mat-label>
+              <span matPrefix style="padding-right:4px">$&nbsp;</span>
+              <input matInput type="text" inputmode="numeric"
+                     [formControl]="paymentForm.controls.amountDisplay"
+                     (input)="onPaymentAmountFormInput($event)" placeholder="0">
+              <mat-icon matSuffix>payments</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" style="flex:1;min-width:140px">
+              <mat-label>Fecha del abono</mat-label>
+              <input matInput [matDatepicker]="payPicker"
+                     [formControl]="paymentForm.controls.paymentDate">
+              <mat-datepicker-toggle matIconSuffix [for]="payPicker"></mat-datepicker-toggle>
+              <mat-datepicker #payPicker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" style="flex:1;min-width:150px">
+              <mat-label>Método de pago</mat-label>
+              <mat-select [formControl]="paymentForm.controls.paymentMethod">
+                <mat-option value="">Sin especificar</mat-option>
+                @for (m of paymentMethods; track m) {
+                  <mat-option [value]="m">
+                    <mat-icon style="font-size:18px;width:18px;height:18px;margin-right:6px;vertical-align:middle">
+                      {{ paymentMethodIcon(m) }}
+                    </mat-icon>
+                    {{ m }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" style="flex:2;min-width:180px">
+              <mat-label>Descripción del pago</mat-label>
+              <input matInput [formControl]="paymentForm.controls.notes"
+                     placeholder="Ej: recibió aretes de oro como parte de pago">
+              <mat-icon matSuffix>notes</mat-icon>
+            </mat-form-field>
+
+            <button mat-raised-button color="primary"
+                    [disabled]="!paymentForm.controls.amount.value || !paymentForm.controls.paymentDate.value || addingPayment()"
+                    (click)="addPayment()">
+              @if (addingPayment()) { <mat-spinner diameter="18" style="display:inline-block;margin-right:6px"></mat-spinner> }
+              <mat-icon>add</mat-icon> Registrar
+            </button>
+          </div>
+        }
+
+        @if (loadingPayments()) {
+          <div style="text-align:center;padding:24px"><mat-spinner diameter="36"></mat-spinner></div>
+        } @else if (payments().length === 0) {
+          <div class="empty-payment">
+            <mat-icon>receipt_long</mat-icon>
+            <p>No hay abonos registrados</p>
+          </div>
+        } @else {
+          <div class="payment-records-list">
+            @for (payment of payments(); track payment.id) {
+              <div class="payment-record-item">
+                <div class="payment-record-icon">
+                  <mat-icon>{{ paymentMethodIcon(payment.paymentMethod) }}</mat-icon>
+                </div>
+                <div class="payment-record-body">
+                  <div class="payment-record-header">
+                    <span class="payment-amount">{{ payment.amount | currency:'COP':'symbol':'1.0-0' }}</span>
+                    <span class="payment-date">{{ payment.paymentDate | date:'dd/MM/yyyy' }}</span>
+                    @if (payment.paymentMethod) {
+                      <span class="payment-method-chip">{{ payment.paymentMethod }}</span>
+                    }
+                  </div>
+                  @if (payment.notes) {
+                    <p class="payment-notes">{{ payment.notes }}</p>
+                  }
+                </div>
+                @if (authService.canUpdateStatus()) {
+                  <button mat-icon-button color="warn" (click)="deletePayment(payment)"
+                          title="Eliminar abono" style="flex-shrink:0">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                }
+              </div>
+            }
+            <div class="payment-total-row">
+              <span>Total abonado:</span>
+              <strong>{{ totalPaid | currency:'COP':'symbol':'1.0-0' }}</strong>
+            </div>
+          </div>
+        }
+
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Lightbox foto -->
+    @if (selectedPhoto()) {
+      <div class="lightbox-overlay" (click)="closePhoto()">
+        <img [src]="selectedPhoto()!" alt="Foto ampliada" (click)="$event.stopPropagation()">
+        <button mat-icon-button (click)="closePhoto()" style="position:absolute;top:16px;right:16px;background:rgba(0,0,0,0.5);color:white">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    }
+
+    <!-- Back button (read-only roles) -->
+    @if (!authService.canUpdateStatus()) {
+      <div class="readonly-actions">
+        <button mat-raised-button routerLink="/repairs">
+          <mat-icon>arrow_back</mat-icon>
+          Volver a Arreglos
+        </button>
+      </div>
+    }
+  </div>
+}

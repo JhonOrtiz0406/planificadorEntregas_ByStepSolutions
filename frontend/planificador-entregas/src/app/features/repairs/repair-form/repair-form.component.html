@@ -1,0 +1,175 @@
+<div class="form-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>{{ editMode() ? 'edit' : 'add_circle' }}</mat-icon>
+        {{ editMode() ? 'Editar Arreglo' : 'Nuevo Arreglo' }}
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (loading() && editMode()) {
+        <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+      } @else {
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="repair-form">
+
+          <h3 class="section-title"><mat-icon>person</mat-icon> Datos del Cliente</h3>
+
+          <div class="two-cols">
+            <mat-form-field appearance="outline">
+              <mat-label>Nombres *</mat-label>
+              <input matInput formControlName="clientFirstName" placeholder="Nombres del cliente">
+              <mat-icon matSuffix>person</mat-icon>
+              @if (form.get('clientFirstName')?.hasError('required')) {
+                <mat-error>Los nombres son requeridos</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Apellidos *</mat-label>
+              <input matInput formControlName="clientLastName" placeholder="Apellidos del cliente">
+              <mat-icon matSuffix>person</mat-icon>
+              @if (form.get('clientLastName')?.hasError('required')) {
+                <mat-error>Los apellidos son requeridos</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Celular *</mat-label>
+            <input matInput formControlName="clientPhone" type="tel" placeholder="+57 300 000 0000">
+            <mat-icon matSuffix>phone</mat-icon>
+            @if (form.get('clientPhone')?.hasError('required')) {
+              <mat-error>El celular es requerido</mat-error>
+            }
+            @if (form.get('clientPhone')?.hasError('pattern')) {
+              <mat-error>Número de teléfono inválido</mat-error>
+            }
+          </mat-form-field>
+
+          <h3 class="section-title"><mat-icon>build</mat-icon> Información del Arreglo</h3>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Artículo *</mat-label>
+            <input matInput formControlName="itemDescription" placeholder="Ej: Anillo de oro con piedra suelta">
+            <mat-icon matSuffix>diamond</mat-icon>
+            @if (form.get('itemDescription')?.hasError('required')) {
+              <mat-error>La descripción del artículo es requerida</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Descripción del arreglo *</mat-label>
+            <textarea matInput formControlName="repairDescription" rows="3"
+                      placeholder="Detalle del trabajo a realizar..."></textarea>
+            <mat-icon matSuffix>notes</mat-icon>
+            @if (form.get('repairDescription')?.hasError('required')) {
+              <mat-error>La descripción del arreglo es requerida</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="two-cols">
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha de ingreso *</mat-label>
+              <input matInput [matDatepicker]="entryPicker" formControlName="entryDate" placeholder="DD/MM/AAAA">
+              <mat-datepicker-toggle matIconSuffix [for]="entryPicker"></mat-datepicker-toggle>
+              <mat-datepicker #entryPicker></mat-datepicker>
+              @if (form.get('entryDate')?.hasError('required')) {
+                <mat-error>La fecha de ingreso es requerida</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha de entrega</mat-label>
+              <input matInput [matDatepicker]="deliveryPicker" formControlName="deliveryDate" placeholder="DD/MM/AAAA">
+              <mat-datepicker-toggle matIconSuffix [for]="deliveryPicker"></mat-datepicker-toggle>
+              <mat-datepicker #deliveryPicker></mat-datepicker>
+              <mat-hint>Se puede registrar más adelante</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Valor total *</mat-label>
+            <span matPrefix style="color:#6b7280;padding-right:4px">$&nbsp;</span>
+            <input matInput type="text" inputmode="numeric"
+                   formControlName="totalPriceDisplay"
+                   (input)="onPriceInput($event)"
+                   placeholder="0">
+            <mat-icon matSuffix>payments</mat-icon>
+            <mat-hint>Formato: 1.500.000</mat-hint>
+            @if (form.get('totalPriceDisplay')?.hasError('required')) {
+              <mat-error>El valor total es requerido</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Photo Upload — Galería hasta 3 fotos -->
+          <div class="photo-section">
+            <label class="photo-label">
+              <mat-icon>photo_library</mat-icon>
+              Fotos del artículo
+              <span style="font-size:.8rem;font-weight:400;color:var(--text-secondary);margin-left:6px">
+                ({{ photoUrls().length }}/{{ MAX_PHOTOS }})
+              </span>
+            </label>
+
+            @if (photoUrls().length > 0) {
+              <div class="photo-gallery">
+                @for (url of photoUrls(); track url) {
+                  <div class="photo-thumb">
+                    <img [src]="url" alt="Foto del artículo">
+                    <button type="button" class="photo-delete-btn" (click)="removeLocalPhoto(url)"
+                            title="Eliminar foto">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (canAddPhoto()) {
+              <div class="photo-actions">
+                <label class="upload-btn" for="fileInput">
+                  <mat-icon>collections</mat-icon>
+                  Galería
+                  <input id="fileInput" type="file" accept="image/*" (change)="onFileSelected($event)" hidden>
+                </label>
+                <label class="upload-btn camera-btn" for="cameraInput">
+                  <mat-icon>photo_camera</mat-icon>
+                  Cámara
+                  <input id="cameraInput" type="file" accept="image/*" capture="environment"
+                         (change)="onCameraCapture($event)" hidden>
+                </label>
+              </div>
+            } @else {
+              <p style="font-size:.82rem;color:var(--text-secondary);margin:8px 0 0">
+                Límite de {{ MAX_PHOTOS }} fotos alcanzado. Elimina una para agregar otra.
+              </p>
+            }
+
+            @if (uploadingPhoto()) {
+              <div class="upload-progress">
+                <mat-spinner diameter="22"></mat-spinner>
+                Subiendo imagen...
+              </div>
+            }
+          </div>
+
+          <div class="form-actions">
+            <button mat-stroked-button type="button" (click)="cancel()">
+              Cancelar
+            </button>
+            <button mat-raised-button color="primary" type="submit"
+                    [disabled]="form.invalid || loading()">
+              @if (loading()) {
+                <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+                Guardando...
+              } @else {
+                {{ editMode() ? 'Actualizar' : 'Crear Arreglo' }}
+              }
+            </button>
+          </div>
+        </form>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

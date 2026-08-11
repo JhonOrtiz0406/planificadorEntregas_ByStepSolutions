@@ -49,3 +49,23 @@ export const roleGuard = (...roles: string[]): CanActivateFn => {
     return false;
   };
 };
+
+export const categoryGuard = (...categories: string[]): CanActivateFn => {
+  return () => {
+    const authService = inject(AuthService);
+    const router = inject(Router);
+
+    if (!authService.isAuthenticated()) {
+      router.navigate(['/auth/login']);
+      return false;
+    }
+
+    const category = authService.currentUser()?.organizationCategory;
+    if (category && categories.includes(category)) {
+      return true;
+    }
+
+    router.navigate(['/dashboard']);
+    return false;
+  };
+};
