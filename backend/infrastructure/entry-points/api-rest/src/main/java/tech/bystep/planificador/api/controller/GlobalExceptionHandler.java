@@ -10,6 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import tech.bystep.planificador.api.dto.response.ApiResponse;
 import tech.bystep.planificador.api.dto.response.ControlledErrorResponse;
 import tech.bystep.planificador.api.dto.response.ErrorDetail;
@@ -55,6 +56,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ControlledErrorResponse> handleIllegalState(IllegalStateException ex) {
         return ResponseEntity.badRequest().body(buildError("Operación no permitida",
                 HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ControlledErrorResponse> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(buildError("Archivo demasiado grande",
+                HttpStatus.PAYLOAD_TOO_LARGE.value(), "La foto supera el tamaño máximo permitido (20MB)."));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

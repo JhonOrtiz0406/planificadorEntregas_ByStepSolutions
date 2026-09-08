@@ -12,6 +12,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { RepairService } from '../../../core/services/repair.service';
+import { compressImage } from '../../../core/utils/image-compression.util';
 
 @Component({
   selector: 'app-repair-form',
@@ -125,17 +126,21 @@ export class RepairFormComponent implements OnInit {
     this.photoUrls.update(photos => photos.filter(p => p !== url));
   }
 
-  private processFile(file: File): void {
+  private async processFile(file: File): Promise<void> {
     if (!this.canAddPhoto()) {
       this.snackBar.open(`Máximo ${this.MAX_PHOTOS} fotos por arreglo`, 'Cerrar', { duration: 3000 });
       return;
     }
-    if (!file.type.startsWith('image/')) {
+    // Algunas cámaras Android devuelven el archivo sin `type` (string vacío)
+    // aunque sea una imagen válida — solo bloqueamos si el navegador SÍ
+    // reportó un tipo y no es imagen.
+    if (file.type && !file.type.startsWith('image/')) {
       this.snackBar.open('Solo se permiten archivos de imagen', 'Cerrar', { duration: 3000 });
       return;
     }
     this.uploadingPhoto.set(true);
-    this.repairService.uploadPhoto(file).subscribe({
+    const uploadFile = await compressImage(file);
+    this.repairService.uploadPhoto(uploadFile).subscribe({
       next: ({ url }) => {
         this.photoUrls.update(photos => [...photos, url]);
         this.uploadingPhoto.set(false);
