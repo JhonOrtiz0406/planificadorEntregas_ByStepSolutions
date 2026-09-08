@@ -18,6 +18,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { RepairService } from '../../../core/services/repair.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Repair, RepairStatus, RepairPayment, AddRepairPaymentRequest } from '../../../core/models/repair.model';
+import { formatMoneyInput } from '../../../core/utils/money-input.util';
 
 @Component({
   selector: 'app-repair-detail',
@@ -113,14 +114,9 @@ export class RepairDetailComponent implements OnInit {
   }
 
   onPaymentAmountFormInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    let raw = input.value.replace(/[^0-9]/g, '');
-    if (raw.length > 13) raw = raw.slice(0, 13);
-    const formatted = raw ? Number(raw).toLocaleString('es-CO') : '';
-    const numeric = raw ? Number(raw) : null;
+    const { formatted, numeric } = formatMoneyInput(event.target as HTMLInputElement);
     this.paymentForm.get('amountDisplay')?.setValue(formatted, { emitEvent: false });
     this.paymentForm.get('amount')?.setValue(numeric, { emitEvent: false });
-    input.value = formatted;
   }
 
   addPayment(): void {

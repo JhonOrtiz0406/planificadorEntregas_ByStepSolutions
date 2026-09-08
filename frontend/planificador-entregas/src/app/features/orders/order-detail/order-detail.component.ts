@@ -21,6 +21,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CategoryStatusService } from '../../../core/services/category-status.service';
 import { Order, ProgressStatus, PaymentStatus, PaymentRecord, AddPaymentRecordRequest } from '../../../core/models/order.model';
 import { ConfirmDeliveredDialogComponent } from './confirm-delivered-dialog.component';
+import { formatMoneyInput } from '../../../core/utils/money-input.util';
 
 @Component({
   selector: 'app-order-detail',
@@ -200,14 +201,9 @@ export class OrderDetailComponent implements OnInit {
   }
 
   onPaymentAmountFormInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    let raw = input.value.replace(/[^0-9]/g, '');
-    if (raw.length > 13) raw = raw.slice(0, 13);
-    const formatted = raw ? Number(raw).toLocaleString('es-CO') : '';
-    const numeric = raw ? Number(raw) : null;
+    const { formatted, numeric } = formatMoneyInput(event.target as HTMLInputElement);
     this.paymentForm.get('amountDisplay')?.setValue(formatted, { emitEvent: false });
     this.paymentForm.get('amount')?.setValue(numeric, { emitEvent: false });
-    input.value = formatted;
   }
 
   addPaymentRecord(): void {
