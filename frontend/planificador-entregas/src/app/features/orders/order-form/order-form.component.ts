@@ -12,6 +12,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { OrderService } from '../../../core/services/order.service';
+import { compressImage } from '../../../core/utils/image-compression.util';
 
 @Component({
   selector: 'app-order-form',
@@ -126,13 +127,14 @@ export class OrderFormComponent implements OnInit {
     this.photoUrls.update(photos => photos.filter(p => p !== url));
   }
 
-  private processFile(file: File): void {
+  private async processFile(file: File): Promise<void> {
     if (!this.canAddPhoto()) {
       this.snackBar.open(`Máximo ${this.MAX_PHOTOS} fotos por pedido`, 'Cerrar', { duration: 3000 });
       return;
     }
     this.uploadingPhoto.set(true);
-    this.orderService.uploadPhoto(file).subscribe({
+    const uploadFile = await compressImage(file);
+    this.orderService.uploadPhoto(uploadFile).subscribe({
       next: ({ url }) => {
         this.photoUrls.update(photos => [...photos, url]);
         this.uploadingPhoto.set(false);

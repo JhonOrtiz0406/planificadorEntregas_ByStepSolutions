@@ -12,6 +12,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { RepairService } from '../../../core/services/repair.service';
+import { compressImage } from '../../../core/utils/image-compression.util';
 
 @Component({
   selector: 'app-repair-form',
@@ -125,7 +126,7 @@ export class RepairFormComponent implements OnInit {
     this.photoUrls.update(photos => photos.filter(p => p !== url));
   }
 
-  private processFile(file: File): void {
+  private async processFile(file: File): Promise<void> {
     if (!this.canAddPhoto()) {
       this.snackBar.open(`Máximo ${this.MAX_PHOTOS} fotos por arreglo`, 'Cerrar', { duration: 3000 });
       return;
@@ -135,7 +136,8 @@ export class RepairFormComponent implements OnInit {
       return;
     }
     this.uploadingPhoto.set(true);
-    this.repairService.uploadPhoto(file).subscribe({
+    const uploadFile = await compressImage(file);
+    this.repairService.uploadPhoto(uploadFile).subscribe({
       next: ({ url }) => {
         this.photoUrls.update(photos => [...photos, url]);
         this.uploadingPhoto.set(false);

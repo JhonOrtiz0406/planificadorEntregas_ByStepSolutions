@@ -87,8 +87,10 @@ jobs:
             set -e
             APP_DIR="/etc/dokploy/compose/planificador-entregas-full-aplicacion-tp0u8a/code"
 
-            # Autenticar en GHCR
-            echo "$GHCR_TOKEN" | docker login ghcr.io -u jhonortiz0406 --password-stdin
+            # Autenticar en GHCR (no aborta si falla: el paquete es público,
+            # así que el pull funciona igual sin login si el token expiró)
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u jhonortiz0406 --password-stdin || \
+              echo "WARN: docker login a GHCR falló (token vencido?) — se continúa porque el paquete es público"
 
             # Pre-pull imágenes
             docker pull ghcr.io/jhonortiz0406/delivery-planner-backend:latest
