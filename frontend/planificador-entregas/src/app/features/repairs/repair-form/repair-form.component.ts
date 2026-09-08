@@ -131,7 +131,10 @@ export class RepairFormComponent implements OnInit {
       this.snackBar.open(`Máximo ${this.MAX_PHOTOS} fotos por arreglo`, 'Cerrar', { duration: 3000 });
       return;
     }
-    if (!file.type.startsWith('image/')) {
+    // Algunas cámaras Android devuelven el archivo sin `type` (string vacío)
+    // aunque sea una imagen válida — solo bloqueamos si el navegador SÍ
+    // reportó un tipo y no es imagen.
+    if (file.type && !file.type.startsWith('image/')) {
       this.snackBar.open('Solo se permiten archivos de imagen', 'Cerrar', { duration: 3000 });
       return;
     }
