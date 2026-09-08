@@ -469,18 +469,49 @@ mat-card .mat-mdc-form-field .mdc-notched-outline__trailing {
 .mat-mdc-select-panel {
   border-radius: 12px !important;
   box-shadow: 0 8px 32px rgba(79,70,229,0.16), 0 2px 8px rgba(0,0,0,0.08) !important;
+  background: var(--surface) !important;
 }
 
 .mat-mdc-option {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
   font-size: 0.9rem !important;
   border-radius: 6px !important;
+  color: var(--text-primary) !important;
 }
 
 .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
   background: #f0f0ff !important;
   color: #4f46e5 !important;
 }
+
+body.dark-mode .mat-mdc-select-panel {
+  border: 1px solid rgba(129,140,248,0.15);
+}
+body.dark-mode .mat-mdc-option:hover:not(.mdc-list-item--selected) {
+  background: rgba(129,140,248,0.12) !important;
+}
+body.dark-mode .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+  background: rgba(129,140,248,0.25) !important;
+  color: var(--primary-light) !important;
+}
+
+/* ── Todos los menús desplegables (mat-menu) — mismo problema de fondo transparente ── */
+.mat-mdc-menu-panel {
+  background: var(--surface) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(79,70,229,0.16), 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+body.dark-mode .mat-mdc-menu-panel {
+  border: 1px solid rgba(129,140,248,0.15);
+}
+.mat-mdc-menu-item {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+  color: var(--text-primary) !important;
+}
+.mat-mdc-menu-item .mat-icon:not([color="warn"]) { color: var(--text-secondary) !important; }
+.mat-mdc-menu-item:not([disabled]):hover { background: rgba(79,70,229,0.08) !important; }
+body.dark-mode .mat-mdc-menu-item:not([disabled]):hover { background: rgba(129,140,248,0.12) !important; }
+.mat-mdc-menu-item[disabled] { opacity: 0.85; }
 
 /* ── "Medio de pago" dropdown — fondo limpio (modo diurno) ── */
 .payment-method-panel.mat-mdc-select-panel {

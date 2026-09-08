@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { RepairService } from '../../../core/services/repair.service';
 import { compressImage } from '../../../core/utils/image-compression.util';
+import { formatMoneyInput } from '../../../core/utils/money-input.util';
 
 @Component({
   selector: 'app-repair-form',
@@ -64,12 +65,8 @@ export class RepairFormComponent implements OnInit {
   }
 
   onPriceInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    let raw = input.value.replace(/[^0-9]/g, '');
-    if (raw.length > 13) raw = raw.slice(0, 13);
-    const formatted = raw ? Number(raw).toLocaleString('es-CO') : '';
+    const { formatted } = formatMoneyInput(event.target as HTMLInputElement);
     this.form.get('totalPriceDisplay')?.setValue(formatted, { emitEvent: false });
-    input.value = formatted;
   }
 
   private parsePriceValue(): number | null {
