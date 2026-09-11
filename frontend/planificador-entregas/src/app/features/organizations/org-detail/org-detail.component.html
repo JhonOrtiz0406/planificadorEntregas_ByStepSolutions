@@ -72,6 +72,16 @@
       </mat-card-content>
     </mat-card>
 
+    <!-- Administrador y contacto -->
+    <app-org-contact-card [org]="o"
+                          [canEdit]="authService.isOrgAdmin() || authService.isPlatformAdmin()"
+                          (orgUpdated)="org.set($event)"></app-org-contact-card>
+
+    <!-- WhatsApp: cada organización con su propio número -->
+    @if (authService.isOrgAdmin() || authService.isPlatformAdmin()) {
+      <app-org-whatsapp-card [orgId]="o.id" [isPlatformAdmin]="authService.isPlatformAdmin()"></app-org-whatsapp-card>
+    }
+
     <!-- Invite Member -->
     @if (authService.isOrgAdmin() || authService.isPlatformAdmin()) {
       <mat-card>

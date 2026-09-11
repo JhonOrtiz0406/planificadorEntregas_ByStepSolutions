@@ -3,11 +3,11 @@ package tech.bystep.planificador.usecase;
 import lombok.RequiredArgsConstructor;
 import tech.bystep.planificador.model.*;
 import tech.bystep.planificador.model.gateways.*;
+import tech.bystep.planificador.model.whatsapp.NotificationEvent;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
@@ -16,12 +16,10 @@ import java.util.stream.Collectors;
 public class OrderUseCase {
 
     private static final int[] REMINDER_DAYS = {5, 3, 1, 0};
-    private static final DateTimeFormatter DATE_FMT =
-            DateTimeFormatter.ofPattern("d/MM/yyyy");
 
     private final OrderGateway orderGateway;
     private final ReminderGateway reminderGateway;
-    private final WhatsAppGateway whatsAppGateway;
+    private final ClientNotificationUseCase clientNotifications;
     private final NotificationGateway notificationGateway;
     private final UserGateway userGateway;
     private final tech.bystep.planificador.model.gateways.PaymentRecordGateway paymentRecordGateway;
@@ -32,6 +30,7 @@ public class OrderUseCase {
         order.setProgressStatus(ProgressStatus.NOT_STARTED);
         order.setPaymentStatus(PaymentStatus.UNPAID);
         if (order.getPaymentAmount() == null) order.setPaymentAmount(BigDecimal.ZERO);
+        if (order.getNotifyWhatsapp() == null) order.setNotifyWhatsapp(true);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
         Order saved = orderGateway.save(order);
@@ -51,6 +50,7 @@ public class OrderUseCase {
         if (updates.getDescription() != null) existing.setDescription(updates.getDescription());
         if (updates.getPhotoUrl() != null) existing.setPhotoUrl(updates.getPhotoUrl());
         if (updates.getTotalPrice() != null) existing.setTotalPrice(updates.getTotalPrice());
+        if (updates.getNotifyWhatsapp() != null) existing.setNotifyWhatsapp(updates.getNotifyWhatsapp());
 
         boolean dateChanged = updates.getDeliveryDate() != null
                 && !updates.getDeliveryDate().equals(existing.getDeliveryDate());
@@ -73,7 +73,15 @@ public class OrderUseCase {
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + id));
         List<String> photos = order.getPhotoUrls() != null
                 ? new ArrayList<>(order.getPhotoUrls()) : new ArrayList<>();
-        photos.remove(photoUrl);
+        boolean belongsToOrder = photos.remove(photoUrl);
+        if (photoUrl != null && photoUrl.equals(order.getPhotoUrl())) {
+            order.setPhotoUrl(null);
+            belongsToOrder = true;
+        }
+        if (!belongsToOrder) {
+            // Aislamiento: nunca borrar archivos que no pertenecen a este pedido (ni a esta organización).
+            throw new IllegalArgumentException("La foto no pertenece a este pedido");
+        }
         order.setPhotoUrls(photos);
         order.setUpdatedAt(LocalDateTime.now());
         Order saved = orderGateway.save(order);
@@ -97,6 +105,7 @@ public class OrderUseCase {
         order.setPaymentAmount(total);
         order.setUpdatedAt(LocalDateTime.now());
         orderGateway.save(order);
+        notifyClientPayment(order, saved);
         return saved;
     }
 
@@ -110,6 +119,8 @@ public class OrderUseCase {
         Order order = orderGateway.findByIdAndOrganizationId(orderId, organizationId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
         paymentRecordGateway.findById(recordId)
+                // Aislamiento: el abono debe pertenecer a ESTE pedido (que ya se validó que es de la organización).
+                .filter(r -> orderId.equals(r.getOrderId()))
                 .orElseThrow(() -> new IllegalArgumentException("Payment record not found: " + recordId));
         paymentRecordGateway.deleteById(recordId);
         java.math.BigDecimal total = paymentRecordGateway.sumAmountByOrderId(orderId);
@@ -160,39 +171,49 @@ public class OrderUseCase {
         orderGateway.deleteById(id);
     }
 
-    // ── WhatsApp — client notifications ────────────────────────────────────
+    // ── WhatsApp — notificaciones al cliente final (cola por organización) ────
 
     private void notifyClientOrderCreated(Order order) {
-        sendWhatsApp(order.getClientPhone(), "pedido_creado", List.of(
-                order.getClientName(),
-                order.getProductName(),
-                order.getDeliveryDate().format(DATE_FMT),
-                order.getOrderNumber()
-        ));
+        clientNotifications.notify(order.getOrganizationId(), NotificationEvent.ORDER_CREATED,
+                ClientNotificationUseCase.ENTITY_ORDER, order.getId(), order.getClientPhone(), order.getNotifyWhatsapp(),
+                Arrays.asList(order.getClientName(), order.getOrderNumber(), order.getProductName(),
+                        NotificationText.date(order.getDeliveryDate())),
+                "ORDER:" + order.getId() + ":CREATED");
     }
 
     private void notifyClientDateChanged(Order order, LocalDate newDate) {
-        sendWhatsApp(order.getClientPhone(), "cambio_fecha", List.of(
-                order.getClientName(),
-                order.getProductName(),
-                newDate.format(DATE_FMT),
-                order.getOrderNumber()
-        ));
+        clientNotifications.notify(order.getOrganizationId(), NotificationEvent.ORDER_DATE_CHANGED,
+                ClientNotificationUseCase.ENTITY_ORDER, order.getId(), order.getClientPhone(), order.getNotifyWhatsapp(),
+                Arrays.asList(order.getClientName(), order.getOrderNumber(), order.getProductName(),
+                        NotificationText.date(newDate)),
+                "ORDER:" + order.getId() + ":DATE:" + newDate);
     }
 
     private void notifyStatusChange(Order order, ProgressStatus status) {
-        switch (status) {
-            case READY_TO_DELIVER -> {
-                sendWhatsApp(order.getClientPhone(), "pedido_listo", List.of(
-                        order.getClientName(), order.getProductName(), order.getOrderNumber()));
-                notifyDeliveryWorkers(order);
-            }
-            case IN_PREPARATION -> sendWhatsApp(order.getClientPhone(), "pedido_en_preparacion", List.of(
-                    order.getClientName(), order.getProductName(), order.getOrderNumber()));
-            case DELIVERED -> sendWhatsApp(order.getClientPhone(), "pedido_entregado", List.of(
-                    order.getClientName(), order.getProductName(), order.getOrderNumber()));
-            default -> { /* otros estados: sin notificación al cliente */ }
+        NotificationEvent event = switch (status) {
+            case IN_PREPARATION -> NotificationEvent.ORDER_IN_PROGRESS;
+            case READY_TO_DELIVER -> NotificationEvent.ORDER_READY;
+            case DELIVERED -> NotificationEvent.ORDER_DELIVERED;
+            default -> null; // otros estados: sin notificación al cliente
+        };
+        if (status == ProgressStatus.READY_TO_DELIVER) {
+            notifyDeliveryWorkers(order);
         }
+        if (event == null) return;
+        clientNotifications.notify(order.getOrganizationId(), event,
+                ClientNotificationUseCase.ENTITY_ORDER, order.getId(), order.getClientPhone(), order.getNotifyWhatsapp(),
+                Arrays.asList(order.getClientName(), order.getOrderNumber(), order.getProductName()),
+                "ORDER:" + order.getId() + ":STATUS:" + status.name());
+    }
+
+    private void notifyClientPayment(Order order, tech.bystep.planificador.model.PaymentRecord record) {
+        BigDecimal total = order.getTotalPrice() != null ? order.getTotalPrice() : BigDecimal.ZERO;
+        BigDecimal paid = order.getPaymentAmount() != null ? order.getPaymentAmount() : BigDecimal.ZERO;
+        clientNotifications.notify(order.getOrganizationId(), NotificationEvent.ORDER_PAYMENT,
+                ClientNotificationUseCase.ENTITY_ORDER, order.getId(), order.getClientPhone(), order.getNotifyWhatsapp(),
+                Arrays.asList(order.getClientName(), NotificationText.money(record.getAmount()), order.getOrderNumber(),
+                        NotificationText.money(total.subtract(paid))),
+                "ORDER_PAYMENT:" + record.getId());
     }
 
     // ── FCM — delivery worker notification on READY_TO_DELIVER ─────────────
@@ -221,12 +242,6 @@ public class OrderUseCase {
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────
-
-    private void sendWhatsApp(String phone, String templateName, List<String> params) {
-        if (phone != null && !phone.isBlank()) {
-            whatsAppGateway.sendTemplate(phone, templateName, params);
-        }
-    }
 
     private void createReminders(Order order) {
         List<Reminder> reminders = new ArrayList<>();

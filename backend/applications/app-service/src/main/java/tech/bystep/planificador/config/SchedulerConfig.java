@@ -13,8 +13,9 @@ public class SchedulerConfig {
 
     private final ReminderUseCase reminderUseCase;
 
-    // Runs every day at 8:00 AM
-    @Scheduled(cron = "0 0 8 * * *")
+    // Todos los días a las 8:00 a.m. hora Colombia (el contenedor corre en UTC).
+    // Recordatorios INTERNOS (push al equipo). Las notificaciones al cliente salen de inmediato.
+    @Scheduled(cron = "0 0 8 * * *", zone = "America/Bogota")
     public void processDeliveryReminders() {
         log.info("Processing daily delivery reminders...");
         try {

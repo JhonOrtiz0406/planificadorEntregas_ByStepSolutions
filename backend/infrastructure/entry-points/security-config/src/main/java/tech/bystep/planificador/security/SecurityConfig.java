@@ -25,6 +25,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtService jwtService;
+    private final TenantAccessVerifier tenantAccessVerifier;
 
     @Value("${app.security.cors-allowed-origins}")
     private String allowedOrigins;
@@ -38,12 +39,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/invitations/accept/**").permitAll()
-                        .requestMatchers("/api/webhooks/whatsapp").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtAuthFilter(jwtService, tenantAccessVerifier), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

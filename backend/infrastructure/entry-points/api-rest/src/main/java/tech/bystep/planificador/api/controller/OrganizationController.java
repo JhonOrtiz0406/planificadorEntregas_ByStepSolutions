@@ -39,7 +39,12 @@ public class OrganizationController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','ORG_ADMIN')")
-    public ResponseEntity<ApiResponse<Organization>> getOrganization(@PathVariable("id") UUID id) {
+    public ResponseEntity<ApiResponse<Organization>> getOrganization(
+            @PathVariable("id") UUID id,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        if (!canAccessOrg(principal, id)) {
+            return ResponseEntity.status(403).body(ApiResponse.error("Access denied"));
+        }
         return organizationUseCase.findById(id)
                 .map(o -> ResponseEntity.ok(ApiResponse.ok(o)))
                 .orElse(ResponseEntity.notFound().build());
@@ -54,6 +59,10 @@ public class OrganizationController {
                 .logoUrl(request.getLogoUrl())
                 .adminEmail(request.getAdminEmail())
                 .category(request.getCategory() != null ? request.getCategory() : "GENERAL")
+                .adminFirstName(request.getAdminFirstName())
+                .adminLastName(request.getAdminLastName())
+                .adminPhone(request.getAdminPhone())
+                .organizationPhone(request.getOrganizationPhone())
                 .build();
         Organization created = organizationUseCase.create(org);
         invitationUseCase.create(request.getAdminEmail(), tech.bystep.planificador.model.UserRole.ORG_ADMIN, created.getId(), created.getName());
@@ -71,6 +80,8 @@ public class OrganizationController {
         }
         Organization updates = Organization.builder()
                 .name(request.getName()).logoUrl(request.getLogoUrl()).adminEmail(request.getAdminEmail())
+                .adminFirstName(request.getAdminFirstName()).adminLastName(request.getAdminLastName())
+                .adminPhone(request.getAdminPhone()).organizationPhone(request.getOrganizationPhone())
                 .build();
         Organization updated = organizationUseCase.update(id, updates);
         return ResponseEntity.ok(ApiResponse.ok("Organization updated", updated));
@@ -101,13 +112,18 @@ public class OrganizationController {
 
     @GetMapping("/{id}/members")
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','ORG_ADMIN')")
-    public ResponseEntity<ApiResponse<List<User>>> getMembers(
+    public ResponseEntity<ApiResponse<List<MemberResponse>>> getMembers(
             @PathVariable("id") UUID id,
             @AuthenticationPrincipal UserPrincipal principal) {
         if ("ORG_ADMIN".equals(principal.getRole()) && !id.toString().equals(principal.getOrganizationId())) {
             return ResponseEntity.status(403).body(ApiResponse.error("Access denied"));
         }
-        return ResponseEntity.ok(ApiResponse.ok(userUseCase.findByOrganization(id)));
+        // Sin googleId ni token FCM: solo lo que la pantalla necesita.
+        List<MemberResponse> members = userUseCase.findMembers(id).stream()
+                .map(u -> new MemberResponse(u.getId(), u.getEmail(), u.getName(), u.getPictureUrl(),
+                        u.getRole() != null ? u.getRole().name() : null, id, u.isActive(), u.getCreatedAt()))
+                .toList();
+        return ResponseEntity.ok(ApiResponse.ok(members));
     }
 
     @DeleteMapping("/{id}/members/{userId}")
@@ -121,8 +137,7 @@ public class OrganizationController {
             return ResponseEntity.status(403).body(ApiResponse.error("Access denied"));
         }
         // Resolve target user and enforce role restrictions
-        User target = userUseCase.findById(userId)
-                .orElse(null);
+        User target = memberOf(userId, id);
         if (target == null) {
             return ResponseEntity.notFound().build();
         }
@@ -134,7 +149,7 @@ public class OrganizationController {
                         "Organization admin cannot deactivate an admin account"));
             }
         }
-        userUseCase.deactivate(userId);
+        userUseCase.deactivateMembership(userId, id);
         String orgName = organizationUseCase.findById(id).map(o -> o.getName()).orElse("tu organización");
         emailGateway.sendMemberDeactivated(target.getEmail(), target.getName(), orgName);
         return ResponseEntity.ok(ApiResponse.ok("Member deactivated", null));
@@ -149,7 +164,7 @@ public class OrganizationController {
         if ("ORG_ADMIN".equals(principal.getRole()) && !id.toString().equals(principal.getOrganizationId())) {
             return ResponseEntity.status(403).body(ApiResponse.error("Access denied"));
         }
-        User target = userUseCase.findById(userId).orElse(null);
+        User target = memberOf(userId, id);
         if (target == null) return ResponseEntity.notFound().build();
         if ("ORG_ADMIN".equals(principal.getRole())) {
             String targetRole = target.getRole().name();
@@ -157,7 +172,7 @@ public class OrganizationController {
                 return ResponseEntity.status(403).body(ApiResponse.error("Organization admin cannot enable an admin account"));
             }
         }
-        userUseCase.activate(userId);
+        userUseCase.activateMembership(userId, id);
         String orgName = organizationUseCase.findById(id).map(o -> o.getName()).orElse("tu organización");
         emailGateway.sendMemberReactivated(target.getEmail(), target.getName(), orgName);
         return ResponseEntity.ok(ApiResponse.ok("Member enabled", null));
@@ -172,7 +187,7 @@ public class OrganizationController {
         if ("ORG_ADMIN".equals(principal.getRole()) && !id.toString().equals(principal.getOrganizationId())) {
             return ResponseEntity.status(403).body(ApiResponse.error("Access denied"));
         }
-        User target = userUseCase.findById(userId).orElse(null);
+        User target = memberOf(userId, id);
         if (target == null) return ResponseEntity.notFound().build();
         if ("ORG_ADMIN".equals(principal.getRole())) {
             String targetRole = target.getRole().name();
@@ -183,7 +198,7 @@ public class OrganizationController {
         String orgName = organizationUseCase.findById(id).map(o -> o.getName()).orElse("tu organización");
         String email = target.getEmail();
         String name  = target.getName();
-        userUseCase.delete(userId);
+        userUseCase.removeFromOrganization(userId, id);
         emailGateway.sendMemberDeleted(email, name, orgName);
         return ResponseEntity.ok(ApiResponse.ok("Member permanently deleted", null));
     }
@@ -221,5 +236,27 @@ public class OrganizationController {
         String iconName = body.get("iconName");
         Organization updated = organizationUseCase.updateIcon(id, iconName);
         return ResponseEntity.ok(ApiResponse.ok("Icon updated", updated));
+    }
+
+    /** PLATFORM_ADMIN ve todas; cualquier otro rol solo su propia organización. */
+    private boolean canAccessOrg(UserPrincipal principal, UUID orgId) {
+        if (principal == null) return false;
+        if ("PLATFORM_ADMIN".equals(principal.getRole())) return true;
+        return orgId.toString().equals(principal.getOrganizationId());
+    }
+
+    /**
+     * Aislamiento: el usuario objetivo debe pertenecer a ESTA organización. Devuelve el
+     * usuario con el rol que tiene en ella, o null si no es miembro.
+     */
+    private User memberOf(UUID userId, UUID orgId) {
+        return userUseCase.findMembers(orgId).stream()
+                .filter(u -> userId.equals(u.getId()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public record MemberResponse(UUID id, String email, String name, String pictureUrl, String role,
+                                 UUID organizationId, boolean active, java.time.LocalDateTime createdAt) {
     }
 }

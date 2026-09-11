@@ -34,6 +34,8 @@ public class Order {
     private BigDecimal totalPrice;
     private UUID organizationId;
     private UUID createdById;
+    /** null = sin cambio (en updates). Al crear, null se interpreta como true. */
+    private Boolean notifyWhatsapp;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

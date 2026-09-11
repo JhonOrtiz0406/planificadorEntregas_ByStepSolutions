@@ -15,4 +15,7 @@ public class UserOrganization {
     private UUID userId;
     private UUID organizationId;
     private String role;
+    /** Estado de la membresía en ESA organización (independiente de las demás). */
+    @Builder.Default
+    private boolean active = true;
 }

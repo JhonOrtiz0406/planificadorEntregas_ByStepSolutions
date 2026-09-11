@@ -35,6 +35,7 @@ public class OrderResponse {
     private BigDecimal totalPrice;
     private BigDecimal balanceDue;
     private UUID organizationId;
+    private Boolean notifyWhatsapp;
     private long daysUntilDelivery;
     private boolean overdue;
     private LocalDateTime createdAt;

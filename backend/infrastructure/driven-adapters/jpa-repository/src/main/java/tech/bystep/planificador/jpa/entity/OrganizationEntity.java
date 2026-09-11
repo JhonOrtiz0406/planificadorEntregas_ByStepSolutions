@@ -41,6 +41,18 @@ public class OrganizationEntity {
     @Column(name = "category", nullable = false)
     private String category;
 
+    @Column(name = "admin_first_name")
+    private String adminFirstName;
+
+    @Column(name = "admin_last_name")
+    private String adminLastName;
+
+    @Column(name = "admin_phone")
+    private String adminPhone;
+
+    @Column(name = "organization_phone")
+    private String organizationPhone;
+
     @Column(name = "is_active")
     private boolean active;
 

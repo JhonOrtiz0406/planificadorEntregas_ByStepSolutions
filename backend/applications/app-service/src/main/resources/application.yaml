@@ -83,12 +83,14 @@ app:
     service-account-json: ${FIREBASE_SERVICE_ACCOUNT_JSON}
     storage-bucket: ${FIREBASE_STORAGE_BUCKET}
 
+  # WhatsApp: cada organización tiene su propio número y token (se guardan cifrados en BD).
+  # Aquí solo va la configuración global del servidor.
   whatsapp:
-    access-token: ${WHATSAPP_ACCESS_TOKEN:}
-    phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
-    webhook-verify-token: ${WHATSAPP_WEBHOOK_VERIFY_TOKEN:}
-    test-mode: ${WHATSAPP_TEST_MODE:false}
-    language: ${WHATSAPP_LANGUAGE:es}
+    enabled: ${WHATSAPP_ENABLED:true}
+    dry-run: ${WHATSAPP_DRY_RUN:false}
+    graph-version: ${WHATSAPP_GRAPH_VERSION:v23.0}
+    credentials-key: ${WHATSAPP_CREDENTIALS_KEY:}
+    sweep-interval-ms: ${WHATSAPP_SWEEP_INTERVAL_MS:15000}
 
 management:
   endpoints:

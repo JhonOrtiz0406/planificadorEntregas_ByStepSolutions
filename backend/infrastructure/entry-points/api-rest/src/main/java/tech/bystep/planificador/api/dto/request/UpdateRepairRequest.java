@@ -21,4 +21,6 @@ public class UpdateRepairRequest {
     private LocalDate deliveryDate;
     @Size(max = 3, message = "Máximo 3 fotos por arreglo")
     private List<String> photoUrls;
+    /** Checkbox "Notificar al cliente por WhatsApp". null = sí (al crear) / sin cambio (al editar). */
+    private Boolean notifyWhatsapp;
 }

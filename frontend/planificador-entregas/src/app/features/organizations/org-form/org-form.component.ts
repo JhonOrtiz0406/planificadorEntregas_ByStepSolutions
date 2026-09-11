@@ -13,6 +13,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { OrganizationService } from '../../../core/services/organization.service';
 import { CategoryStatusService } from '../../../core/services/category-status.service';
 
+/** Celular: dígitos, espacios, guiones y + opcional (ej. 300 123 4567 o +57 300 123 4567). */
+const PHONE_PATTERN = /^\+?[0-9\s-]{10,18}$/;
+
 @Component({
   selector: 'app-org-form',
   standalone: true,
@@ -84,6 +87,25 @@ import { CategoryStatusService } from '../../../core/services/category-status.se
                 <mat-error>La categoría es requerida</mat-error>
               }
             </mat-form-field>
+            <h4 style="margin:8px 0 0;color:var(--text-primary);display:flex;align-items:center;gap:6px">
+              <mat-icon>badge</mat-icon> Administrador de la organización
+            </h4>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <mat-form-field appearance="outline" style="flex:1;min-width:200px">
+                <mat-label>Nombres *</mat-label>
+                <input matInput formControlName="adminFirstName" placeholder="Ej: María Fernanda">
+                @if (form.get('adminFirstName')?.hasError('required')) {
+                  <mat-error>Los nombres son requeridos</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" style="flex:1;min-width:200px">
+                <mat-label>Apellidos *</mat-label>
+                <input matInput formControlName="adminLastName" placeholder="Ej: Gómez Restrepo">
+                @if (form.get('adminLastName')?.hasError('required')) {
+                  <mat-error>Los apellidos son requeridos</mat-error>
+                }
+              </mat-form-field>
+            </div>
             <mat-form-field appearance="outline">
               <mat-label>Email del administrador *</mat-label>
               <input matInput formControlName="adminEmail" type="email" placeholder="admin@empresa.com">
@@ -95,6 +117,28 @@ import { CategoryStatusService } from '../../../core/services/category-status.se
                 <mat-error>Email inválido</mat-error>
               }
             </mat-form-field>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <mat-form-field appearance="outline" style="flex:1;min-width:200px">
+                <mat-label>Celular personal del administrador *</mat-label>
+                <input matInput formControlName="adminPhone" type="tel" placeholder="300 123 4567">
+                <mat-icon matSuffix>smartphone</mat-icon>
+                @if (form.get('adminPhone')?.hasError('required')) {
+                  <mat-error>El celular personal es requerido</mat-error>
+                }
+                @if (form.get('adminPhone')?.hasError('pattern')) {
+                  <mat-error>Celular inválido</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline" style="flex:1;min-width:200px">
+                <mat-label>Celular de la organización (WhatsApp)</mat-label>
+                <input matInput formControlName="organizationPhone" type="tel" placeholder="300 765 4321">
+                <mat-icon matSuffix>chat</mat-icon>
+                <mat-hint>Número que se registrará en Meta para enviar las notificaciones</mat-hint>
+                @if (form.get('organizationPhone')?.hasError('pattern')) {
+                  <mat-error>Celular inválido</mat-error>
+                }
+              </mat-form-field>
+            </div>
             <div style="display:flex;gap:12px;justify-content:flex-end">
               <button mat-button type="button" routerLink="/organizations">Cancelar</button>
               <button mat-raised-button color="primary" type="submit"
@@ -125,7 +169,11 @@ export class OrgFormComponent implements OnInit {
     name: ['', [Validators.required, Validators.maxLength(255)]],
     category: ['GENERAL', [Validators.required]],
     logoUrl: [''],
-    adminEmail: ['', [Validators.required, Validators.email]]
+    adminEmail: ['', [Validators.required, Validators.email]],
+    adminFirstName: ['', [Validators.required, Validators.maxLength(100)]],
+    adminLastName: ['', [Validators.required, Validators.maxLength(100)]],
+    adminPhone: ['', [Validators.required, Validators.pattern(PHONE_PATTERN)]],
+    organizationPhone: ['', [Validators.pattern(PHONE_PATTERN)]]
   });
 
   ngOnInit(): void {
@@ -166,13 +214,22 @@ export class OrgFormComponent implements OnInit {
   onSubmit(): void {
     if (this.form.invalid) return;
     this.loading.set(true);
-    this.orgService.create(this.form.value as any).subscribe({
+    const value = this.form.value;
+    const request = {
+      ...value,
+      adminFirstName: value.adminFirstName?.trim(),
+      adminLastName: value.adminLastName?.trim(),
+      adminPhone: value.adminPhone?.trim(),
+      organizationPhone: value.organizationPhone?.trim() || undefined
+    };
+    this.orgService.create(request as any).subscribe({
       next: (org) => {
         this.snackBar.open('Organización creada. Invitación enviada al administrador.', 'Cerrar', { duration: 4000 });
         this.router.navigate(['/organizations', org.id]);
       },
       error: (err) => {
-        this.snackBar.open(err.error?.message || 'Error al crear la organización', 'Cerrar', { duration: 4000 });
+        const detail = err.error?.data?.errors?.[0]?.description;
+        this.snackBar.open(detail || err.error?.message || 'Error al crear la organización', 'Cerrar', { duration: 5000 });
         this.loading.set(false);
       }
     });
