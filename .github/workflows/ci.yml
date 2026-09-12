@@ -1,67 +1,164 @@
 name: CI
 
+# Valida cada rama y cada PR. Deja un resumen visual en la pestaña "Summary"
+# de la ejecución: pruebas por módulo, cobertura, migraciones nuevas y peso del frontend.
+
 on:
   push:
-    branches:
-      - main
-      - 'feature/**'
+    branches: [main, 'feature/**', 'fix/**', 'hotfix/**']
   pull_request:
-    branches:
-      - main
-      - 'feature/**'
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  # ────────────────────────────────────────────────
-  # Backend — build + test (all branches)
-  # ────────────────────────────────────────────────
+  # ────────────────────────────────────────────────────────────
   backend:
-    name: Backend Build & Test
+    name: 🧱 Backend · compilar y probar
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up JDK 21
+      - name: ☕ JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
 
-      - name: Make gradlew executable
-        working-directory: backend
-        run: chmod +x gradlew
-
-      - name: Build and test
-        working-directory: backend
-        run: ./gradlew build --no-daemon -x :app-service:bootJar
-
-      - name: Coverage report
-        working-directory: backend
-        run: ./gradlew jacocoMergedReport --no-daemon
+      - name: 🔨 Compilar y probar
+        id: gradle
         continue-on-error: true
+        working-directory: backend
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-daemon -x :app-service:bootJar
 
-  # ────────────────────────────────────────────────
-  # Frontend — build (all branches)
-  # ────────────────────────────────────────────────
+      - name: 🧪 Resumen de pruebas y cobertura
+        if: always()
+        run: python3 .github/scripts/resumen_pruebas.py backend
+
+      - name: 🗃️ Migraciones nuevas respecto a main
+        if: always()
+        run: |
+          BASE="origin/${{ github.base_ref || 'main' }}"
+          git fetch origin main --quiet || true
+          NUEVAS=$(git diff --name-only --diff-filter=A "$BASE"...HEAD -- '*db/migration/*.sql' 2>/dev/null || true)
+          {
+            echo "### 🗃️ Migraciones de base de datos"
+            echo ""
+            if [ -z "$NUEVAS" ]; then
+              echo "Sin migraciones nuevas en esta rama."
+            else
+              echo "Esta rama agrega migraciones. Flyway las aplicará **al desplegar a producción**:"
+              echo ""
+              echo "$NUEVAS" | sed 's|.*/|- `|; s|$|`|'
+              echo ""
+              echo "> Revisa que sean aditivas (sin DROP ni renombrados) antes de hacer merge a main."
+            fi
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 📎 Guardar reportes de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-backend
+          path: |
+            backend/**/build/reports/tests/**
+            backend/**/build/test-results/**
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: 🚦 Resultado del backend
+        if: always()
+        run: |
+          if [ "${{ steps.gradle.outcome }}" != "success" ]; then
+            echo "❌ El backend no compiló o falló alguna prueba. Revisa el resumen y el artefacto \`reportes-backend\`." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "✅ Backend compilado y probado." >> "$GITHUB_STEP_SUMMARY"
+
+  # ────────────────────────────────────────────────────────────
   frontend:
-    name: Frontend Build
+    name: 🎨 Frontend · compilar
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: frontend/planificador-entregas
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node
+      - name: 🟩 Node 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
           cache-dependency-path: frontend/planificador-entregas/package-lock.json
 
-      - name: Install dependencies
-        working-directory: frontend/planificador-entregas
-        run: npm ci
+      - name: 📦 Instalar dependencias
+        run: npm ci --no-audit --no-fund
 
-      - name: Build
-        working-directory: frontend/planificador-entregas
+      - name: 🏗️ Construir
+        id: build
+        continue-on-error: true
         run: npm run build
+
+      - name: 📊 Peso del bundle
+        if: always()
+        run: |
+          {
+            echo "### 🎨 Frontend"
+            echo ""
+            if [ -d dist ]; then
+              TOTAL=$(du -sh dist | cut -f1)
+              echo "| Archivo | Tamaño |"
+              echo "|---|---:|"
+              find dist -name '*.js' -o -name '*.css' | xargs -r du -h 2>/dev/null | sort -rh | head -8 \
+                | awk '{ n=$2; sub(/.*\//,"",n); print "| `" n "` | " $1 " |" }'
+              echo "| **Total del build** | **$TOTAL** |"
+            else
+              echo "No se generó la carpeta \`dist\`."
+            fi
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 🚦 Resultado del frontend
+        if: always()
+        run: |
+          if [ "${{ steps.build.outcome }}" != "success" ]; then
+            echo "❌ El frontend no compiló." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "✅ Frontend compilado." >> "$GITHUB_STEP_SUMMARY"
+
+  # ────────────────────────────────────────────────────────────
+  resumen:
+    name: 📋 Resumen
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: always()
+    steps:
+      - name: Consolidar
+        run: |
+          B="${{ needs.backend.result }}"
+          F="${{ needs.frontend.result }}"
+          icono() { [ "$1" = "success" ] && echo "✅ OK" || echo "❌ $1"; }
+          {
+            echo "## 📋 Resultado de la validación"
+            echo ""
+            echo "| Frente | Estado |"
+            echo "|---|---|"
+            echo "| 🧱 Backend (compilación + pruebas) | $(icono "$B") |"
+            echo "| 🎨 Frontend (compilación) | $(icono "$F") |"
+            echo ""
+            echo "Rama: \`${{ github.ref_name }}\` · Commit: \`${GITHUB_SHA:0:7}\` · Autor: @${{ github.actor }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+          [ "$B" = "success" ] && [ "$F" = "success" ]

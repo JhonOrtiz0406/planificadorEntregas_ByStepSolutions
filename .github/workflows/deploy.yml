@@ -1,56 +1,145 @@
-name: Build & Deploy
+name: Deploy a producción
+
+# Flujo: preparar → verificar el servidor → construir imágenes → desplegar → comprobar.
+# Cada etapa deja su resultado en la pestaña "Summary" de la ejecución.
+# Si algo falla después de desplegar, se hace rollback automático.
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      motivo:
+        description: 'Motivo del despliegue manual'
+        required: false
+        default: 'Despliegue manual'
+
+concurrency:
+  group: deploy-produccion
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
 
 env:
   BACKEND_IMAGE: ghcr.io/jhonortiz0406/delivery-planner-backend
   FRONTEND_IMAGE: ghcr.io/jhonortiz0406/delivery-planner-frontend
   STACK_NAME: delivery-planner
   APP_DIR: /etc/dokploy/compose/planificador-entregas-full-aplicacion-tp0u8a/code
+  API_URL: https://api.delivery-planner.bystepsolutions.tech
+  APP_PUBLIC_URL: https://app.delivery-planner.bystepsolutions.tech
+  LOGS_URL: https://logs.delivery-planner.bystepsolutions.tech
 
 jobs:
-  build-and-deploy:
+  # ═══════════════════════════════════════════════════════════
+  preparacion:
+    name: 🧭 1 · Preparación
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
+    outputs:
+      version: ${{ steps.datos.outputs.version }}
+      migraciones: ${{ steps.datos.outputs.migraciones }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+      - name: Calcular versión y migraciones
+        id: datos
+        run: |
+          VERSION="${GITHUB_SHA:0:7}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          MIGRACIONES=$(git diff --name-only --diff-filter=A HEAD~1 HEAD -- '*db/migration/*.sql' 2>/dev/null | sed 's|.*/||' | paste -sd ', ' -)
+          echo "migraciones=${MIGRACIONES:-ninguna}" >> "$GITHUB_OUTPUT"
+          {
+            echo "# 🚀 Despliegue a producción"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| **Versión** | \`$VERSION\` |"
+            echo "| **Commit** | [\`$VERSION\`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}) |"
+            echo "| **Disparado por** | @${{ github.actor }} |"
+            echo "| **Migraciones nuevas** | ${MIGRACIONES:-ninguna} |"
+            echo ""
+            if [ -n "$MIGRACIONES" ]; then
+              echo "> ⚠️ Este despliegue aplica migraciones de base de datos: **$MIGRACIONES**"
+              echo ""
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v4
+  # ═══════════════════════════════════════════════════════════
+  verificar-servidor:
+    name: 🔎 2 · Verificar servidor y variables
+    runs-on: ubuntu-latest
+    needs: preparacion
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔑 Preparar SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: 🧾 Revisar variables de entorno del stack
+        id: env
+        run: |
+          set -o pipefail
+          ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "APP_DIR='${{ env.APP_DIR }}' bash -s" < .github/scripts/verificar-entorno.sh | tee verificacion.txt
+
+      - name: 📋 Resultado de la verificación
+        if: always()
+        run: |
+          {
+            echo "## 🔎 Verificación del servidor"
+            echo ""
+            if [ -f verificacion.txt ]; then
+              cat verificacion.txt
+            else
+              echo "No se pudo conectar al servidor por SSH."
+            fi
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ═══════════════════════════════════════════════════════════
+  construir:
+    name: 📦 3 · Construir ${{ matrix.nombre }}
+    runs-on: ubuntu-latest
+    needs: [preparacion, verificar-servidor]
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - nombre: backend
+            contexto: ./backend
+            dockerfile: ./backend/deployment/Dockerfile
+          - nombre: frontend
+            contexto: ./frontend/planificador-entregas
+            dockerfile: ./frontend/planificador-entregas/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Entrar a GHCR
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push backend
+      - name: 🏗️ Construir y publicar
         uses: docker/build-push-action@v6
         with:
-          context: ./backend
-          file: ./backend/deployment/Dockerfile
+          context: ${{ matrix.contexto }}
+          file: ${{ matrix.dockerfile }}
           push: true
           tags: |
-            ${{ env.BACKEND_IMAGE }}:latest
-            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push frontend
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend/planificador-entregas
-          push: true
-          tags: |
-            ${{ env.FRONTEND_IMAGE }}:latest
-            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+            ghcr.io/jhonortiz0406/delivery-planner-${{ matrix.nombre }}:latest
+            ghcr.io/jhonortiz0406/delivery-planner-${{ matrix.nombre }}:${{ needs.preparacion.outputs.version }}
           build-args: |
             API_URL=
             APP_NAME=DeliveryPlanner
@@ -62,59 +151,122 @@ jobs:
             FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
             FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
             FIREBASE_VAPID_KEY=${{ secrets.FIREBASE_VAPID_KEY }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.nombre }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.nombre }}
 
-      - name: Copy docker-stack.yml to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: docker-stack.yml
-          target: ${{ env.APP_DIR }}
+      - name: 📋 Resumen
+        if: always()
+        run: |
+          echo "- 📦 Imagen **${{ matrix.nombre }}** → \`${{ matrix.nombre == 'backend' && env.BACKEND_IMAGE || env.FRONTEND_IMAGE }}:${{ needs.preparacion.outputs.version }}\` (${{ job.status }})" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Deploy to Swarm
-        uses: appleboy/ssh-action@v1
+  # ═══════════════════════════════════════════════════════════
+  desplegar:
+    name: 🚀 4 · Desplegar y comprobar
+    runs-on: ubuntu-latest
+    needs: [preparacion, construir]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔑 Preparar SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: 📤 Copiar docker-stack.yml
+        run: |
+          scp -i ~/.ssh/id_deploy -o StrictHostKeyChecking=accept-new \
+            docker-stack.yml "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.APP_DIR }}/docker-stack.yml"
+
+      - name: 🚀 Desplegar en Swarm
+        id: deploy
         env:
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: GHCR_TOKEN
-          script: |
-            set -e
-            APP_DIR="/etc/dokploy/compose/planificador-entregas-full-aplicacion-tp0u8a/code"
+        run: |
+          ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "APP_DIR='${{ env.APP_DIR }}' STACK='${{ env.STACK_NAME }}' VERSION='${{ needs.preparacion.outputs.version }}' GHCR_TOKEN='$GHCR_TOKEN' bash -s" \
+            < .github/scripts/desplegar.sh
 
-            # Autenticar en GHCR (no aborta si falla: el paquete es público,
-            # así que el pull funciona igual sin login si el token expiró)
-            echo "$GHCR_TOKEN" | docker login ghcr.io -u jhonortiz0406 --password-stdin || \
-              echo "WARN: docker login a GHCR falló (token vencido?) — se continúa porque el paquete es público"
+      - name: 🩺 Esperar a que el backend esté sano
+        id: salud
+        run: |
+          echo "Esperando /actuator/health ..."
+          for i in $(seq 1 40); do
+            ESTADO=$(curl -fsS --max-time 10 "${{ env.API_URL }}/actuator/health" 2>/dev/null | grep -o '"status":"[A-Z]*"' | head -1 || true)
+            if [ "$ESTADO" = '"status":"UP"' ]; then
+              echo "sano=si" >> "$GITHUB_OUTPUT"
+              echo "✅ Backend arriba tras $((i*10))s"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "sano=no" >> "$GITHUB_OUTPUT"
+          echo "❌ El backend no respondió UP en 400 segundos"
+          exit 1
 
-            # Pre-pull imágenes
-            docker pull ghcr.io/jhonortiz0406/delivery-planner-backend:latest
-            docker pull ghcr.io/jhonortiz0406/delivery-planner-frontend:latest
+      - name: 🧪 Pruebas de humo
+        id: humo
+        if: steps.salud.outputs.sano == 'si'
+        run: |
+          FALLOS=0
+          linea() { echo "| $1 | $2 | $3 |" >> humo.md; }
+          echo "| Comprobación | Esperado | Resultado |" > humo.md
+          echo "|---|---|---|" >> humo.md
 
-            # Escribir parser de .env (maneja JSON y valores complejos)
-            cat > /tmp/load_env.py << 'PYEOF'
-            import re, sys
-            with open(sys.argv[1]) as f:
-                content = f.read()
-            pattern = r'^([A-Z_][A-Z0-9_]*)\s*=\s*(.*?)(?=\n[A-Z_]|\Z)'
-            for m in re.finditer(pattern, content.strip() + '\n', re.MULTILINE | re.DOTALL):
-                key = m.group(1)
-                val = m.group(2).strip().rstrip('\n')
-                escaped = val.replace("'", "'\"'\"'")
-                print(f"export {key}='{escaped}'")
-            PYEOF
+          VER=$(curl -fsS --max-time 10 "${{ env.API_URL }}/actuator/info" | tr -d ' \n' || true)
+          case "$VER" in
+            *'"version":"${{ needs.preparacion.outputs.version }}"'*)
+              linea "Versión desplegada" "\`${{ needs.preparacion.outputs.version }}\`" "✅ correcta" ;;
+            *) linea "Versión desplegada" "\`${{ needs.preparacion.outputs.version }}\`" "⚠️ no coincide o /actuator/info no expuesto"; FALLOS=$((FALLOS+1)) ;;
+          esac
 
-            # Cargar env vars
-            eval $(python3 /tmp/load_env.py "$APP_DIR/.env")
+          COD=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "${{ env.APP_PUBLIC_URL }}/")
+          [ "$COD" = "200" ] && linea "Frontend responde" "200" "✅ $COD" || { linea "Frontend responde" "200" "❌ $COD"; FALLOS=$((FALLOS+1)); }
 
-            # Rolling deploy — start-first, rollback automático si falla healthcheck
-            docker stack deploy \
-              --with-registry-auth \
-              --compose-file "$APP_DIR/docker-stack.yml" \
-              --detach=false \
-              delivery-planner
+          COD=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "${{ env.API_URL }}/api/organizations")
+          case "$COD" in
+            401|403) linea "API protegida sin token" "401/403" "✅ $COD" ;;
+            *) linea "API protegida sin token" "401/403" "❌ $COD"; FALLOS=$((FALLOS+1)) ;;
+          esac
+
+          COD=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "${{ env.LOGS_URL }}/")
+          case "$COD" in
+            401) linea "Visor de logs con clave" "401" "✅ $COD" ;;
+            000) linea "Visor de logs con clave" "401" "⚠️ sin DNS todavía" ;;
+            *) linea "Visor de logs con clave" "401" "❌ $COD (¿sin protección?)"; FALLOS=$((FALLOS+1)) ;;
+          esac
+
+          cat humo.md
+          echo "fallos=$FALLOS" >> "$GITHUB_OUTPUT"
+          [ "$FALLOS" -eq 0 ]
+
+      - name: ↩️ Rollback automático
+        if: failure()
+        run: |
+          ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "docker service rollback ${{ env.STACK_NAME }}_backend || true; docker service rollback ${{ env.STACK_NAME }}_frontend || true"
+          {
+            echo "## ↩️ Rollback ejecutado"
+            echo ""
+            echo "El despliegue falló, así que se devolvieron los servicios a la versión anterior."
+            echo "Revisa los logs en [$LOGS_URL]($LOGS_URL) y el detalle de los pasos de arriba."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 📋 Resumen final
+        if: always()
+        run: |
+          {
+            echo "## 🏁 Resultado del despliegue"
+            echo ""
+            if [ -f humo.md ]; then cat humo.md; echo ""; fi
+            echo "| | |"
+            echo "|---|---|"
+            echo "| **Versión en producción** | \`${{ needs.preparacion.outputs.version }}\` |"
+            echo "| **Migraciones aplicadas** | ${{ needs.preparacion.outputs.migraciones }} |"
+            echo "| **Estado** | ${{ job.status == 'success' && '✅ Desplegado' || '❌ Falló (ver rollback)' }} |"
+            echo ""
+            echo "🔗 [App](${{ env.APP_PUBLIC_URL }}) · [API](${{ env.API_URL }}/actuator/health) · [Logs](${{ env.LOGS_URL }})"
+          } >> "$GITHUB_STEP_SUMMARY"
