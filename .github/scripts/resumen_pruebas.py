@@ -10,6 +10,10 @@ import glob
 import xml.etree.ElementTree as ET
 
 backend = sys.argv[1] if len(sys.argv) > 1 else "backend"
+
+# Fallas conocidas y aceptadas (el build ya las ignora con ignoreFailures).
+# ArchitectureTest: el hook de reporte usa Jackson 3 RC y revienta; las 6 reglas sí pasan.
+CONOCIDAS = {"ArchitectureTest.executionError"}
 salida = os.environ.get("GITHUB_STEP_SUMMARY")
 
 
@@ -37,15 +41,21 @@ for archivo in glob.glob(f"{backend}/**/build/test-results/test/*.xml", recursiv
     except ET.ParseError:
         continue
     m = nombre_modulo(archivo)
-    d = modulos.setdefault(m, {"total": 0, "fallidas": 0, "omitidas": 0, "seg": 0.0, "detalle": []})
+    d = modulos.setdefault(m, {"total": 0, "fallidas": 0, "omitidas": 0, "conocidas": 0, "seg": 0.0, "detalle": []})
     d["total"] += int(raiz.get("tests", 0))
     d["fallidas"] += int(raiz.get("failures", 0)) + int(raiz.get("errors", 0))
     d["omitidas"] += int(raiz.get("skipped", 0))
     d["seg"] += float(raiz.get("time", 0) or 0)
     for caso in raiz.iter("testcase"):
         for fallo in list(caso.findall("failure")) + list(caso.findall("error")):
+            clase = caso.get("classname", "").split(".")[-1]
+            prueba = f"{clase}.{caso.get('name')}"
             mensaje = (fallo.get("message") or "").splitlines()[0][:160]
-            d["detalle"].append(f"{caso.get('classname','').split('.')[-1]}.{caso.get('name')} — {mensaje}")
+            if prueba in CONOCIDAS:
+                d["conocidas"] += 1
+                d["fallidas"] -= 1
+            else:
+                d["detalle"].append(f"{prueba} — {mensaje}")
 
 # ── Cobertura (JaCoCo XML) ────────────────────────────────────────────
 cobertura = {}
@@ -66,19 +76,24 @@ if not modulos:
     sys.exit(0)
 
 total = sum(d["total"] for d in modulos.values())
-fallidas = sum(d["fallidas"] for d in modulos.values())
+fallidas = sum(max(d["fallidas"], 0) for d in modulos.values())
 omitidas = sum(d["omitidas"] for d in modulos.values())
+conocidas = sum(d["conocidas"] for d in modulos.values())
 icono = "✅" if fallidas == 0 else "❌"
 
-escribir(f"### 🧪 Pruebas del backend — {icono} {total - fallidas}/{total} pasaron\n")
-escribir("| Módulo | Pruebas | Fallidas | Omitidas | Tiempo | Cobertura de líneas |")
-escribir("|---|---:|---:|---:|---:|---:|")
+escribir(f"### 🧪 Pruebas del backend — {icono} {total - fallidas - conocidas}/{total} pasaron\n")
+escribir("| Módulo | Pruebas | Fallidas | Conocidas | Omitidas | Tiempo | Cobertura de líneas |")
+escribir("|---|---:|---:|---:|---:|---:|---:|")
 for m in sorted(modulos):
     d = modulos[m]
     cob = f"{cobertura[m]:.0f}%" if m in cobertura else "—"
-    marca = "✅" if d["fallidas"] == 0 else "❌"
-    escribir(f"| {marca} `{m}` | {d['total']} | {d['fallidas']} | {d['omitidas']} | {d['seg']:.1f}s | {cob} |")
-escribir(f"| **Total** | **{total}** | **{fallidas}** | **{omitidas}** | | |")
+    fall = max(d["fallidas"], 0)
+    marca = "✅" if fall == 0 else "❌"
+    escribir(f"| {marca} `{m}` | {d['total']} | {fall} | {d['conocidas']} | {d['omitidas']} | {d['seg']:.1f}s | {cob} |")
+escribir(f"| **Total** | **{total}** | **{fallidas}** | **{conocidas}** | **{omitidas}** | | |")
+if conocidas:
+    escribir("")
+    escribir("> ⚠️ *Conocidas*: fallas aceptadas que el build ya ignora (`ArchitectureTest`: el hook que genera el reporte de Sonar usa Jackson 3 RC; las 6 reglas de arquitectura sí pasan).")
 escribir("")
 
 fallos = [f"`{m}` → {x}" for m, d in modulos.items() for x in d["detalle"]]
