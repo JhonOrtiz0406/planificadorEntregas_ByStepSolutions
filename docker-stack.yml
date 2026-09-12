@@ -22,6 +22,11 @@ services:
       APP_URL: ${APP_URL}
       SERVER_PORT: ${SERVER_PORT:-8084}
       PLATFORM_ADMIN_EMAIL: ${PLATFORM_ADMIN_EMAIL}
+      # Trazabilidad: qué versión está corriendo (se ve en /actuator/info)
+      APP_VERSION: ${APP_VERSION:-dev}
+      DEPLOYED_AT: ${DEPLOYED_AT:-}
+      # WhatsApp: la configuración de cada organización vive en base de datos.
+      # Aquí solo quedan los interruptores globales del módulo.
       WHATSAPP_ENABLED: ${WHATSAPP_ENABLED:-true}
       WHATSAPP_DRY_RUN: ${WHATSAPP_DRY_RUN:-false}
       WHATSAPP_GRAPH_VERSION: ${WHATSAPP_GRAPH_VERSION:-v23.0}
@@ -114,6 +119,51 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  # ── Visor de logs (solo lectura, protegido con usuario y clave) ──────────
+  dozzle:
+    image: amir20/dozzle:v8
+    environment:
+      DOZZLE_NO_ANALYTICS: "true"
+      DOZZLE_LEVEL: warn
+      # Solo muestra los contenedores de este stack
+      DOZZLE_FILTER: "name=delivery-planner"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - dokploy-network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          memory: 32M
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=dokploy-network"
+        - "traefik.http.middlewares.dp-logs-auth.basicauth.users=${DOZZLE_AUTH}"
+        - "traefik.http.routers.dp-logs-web.rule=Host(`logs.delivery-planner.bystepsolutions.tech`)"
+        - "traefik.http.routers.dp-logs-web.entrypoints=web"
+        - "traefik.http.routers.dp-logs-web.middlewares=redirect-to-https@file"
+        - "traefik.http.routers.dp-logs-web.service=dp-logs-svc"
+        - "traefik.http.routers.dp-logs-websecure.rule=Host(`logs.delivery-planner.bystepsolutions.tech`)"
+        - "traefik.http.routers.dp-logs-websecure.entrypoints=websecure"
+        - "traefik.http.routers.dp-logs-websecure.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.dp-logs-websecure.middlewares=dp-logs-auth"
+        - "traefik.http.routers.dp-logs-websecure.service=dp-logs-svc"
+        - "traefik.http.services.dp-logs-svc.loadbalancer.server.port=8080"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
 
 networks:
   dokploy-network:

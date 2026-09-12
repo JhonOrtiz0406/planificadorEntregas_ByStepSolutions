@@ -96,10 +96,20 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,info
   endpoint:
     health:
       show-details: never
+  info:
+    env:
+      enabled: true
+
+# Se publica en /actuator/info para saber qué versión está corriendo
+info:
+  app:
+    name: ${APP_NAME:DeliveryPlanner}
+    version: ${APP_VERSION:dev}
+    deployedAt: ${DEPLOYED_AT:sin-registro}
 
 logging:
   level:
