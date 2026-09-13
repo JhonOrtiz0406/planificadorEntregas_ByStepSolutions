@@ -56,8 +56,11 @@ body.dark-mode .app-footer {
   color: var(--text-secondary) !important;
 }
 
+body.dark-mode .mat-mdc-snack-bar-container .mdc-snackbar__surface { background-color: #111827 !important; }
 body.dark-mode .snack-success .mdc-snackbar__surface { background: #064e3b !important; color: #6ee7b7 !important; }
 body.dark-mode .snack-error .mdc-snackbar__surface { background: #7f1d1d !important; color: #fca5a5 !important; }
+body.dark-mode .snack-success .mdc-snackbar__label, body.dark-mode .snack-success .mat-mdc-snack-bar-action { color: #6ee7b7 !important; }
+body.dark-mode .snack-error .mdc-snackbar__label, body.dark-mode .snack-error .mat-mdc-snack-bar-action { color: #fca5a5 !important; }
 
 /* ── Material form fields ── */
 body.dark-mode .mat-mdc-form-field-appearance-outline .mdc-notched-outline__leading,
@@ -431,10 +434,11 @@ mat-card:hover {
 
 /* ── Angular Material Form Fields ── */
 
-/* Asegurar padding correcto en el input del campo outline */
+/* Separacion del texto respecto al borde izquierdo del recuadro.
+   Estaba en 4px y el texto quedaba pegado a la linea. */
 .mat-mdc-form-field-appearance-outline .mat-mdc-form-field-infix,
 .mdc-text-field--outlined .mdc-text-field__input {
-  padding-left: 4px !important;
+  padding-left: 12px !important;
 }
 
 /* Fondo del label para que el notch sea correcto en fondo coloreado */
@@ -557,6 +561,23 @@ body.dark-mode .payment-method-panel .mat-mdc-option.mdc-list-item--selected {
 }
 
 /* ── Snackbar styling ── */
+
+/* Aviso por defecto (sin panelClass). Antes no tenia fondo definido y
+   el texto se leia encima del contenido de la pagina. */
+.mat-mdc-snack-bar-container .mdc-snackbar__surface {
+  background-color: #1f2937 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 10px !important;
+}
+.mat-mdc-snack-bar-container .mdc-snackbar__label,
+.mat-mdc-snack-bar-container .mat-mdc-snack-bar-label {
+  color: #f9fafb !important;
+}
+.mat-mdc-snack-bar-container .mat-mdc-snack-bar-action,
+.mat-mdc-snack-bar-container .mat-mdc-button.mat-mdc-snack-bar-action {
+  color: #a5b4fc !important;
+}
+
 .snack-error .mdc-snackbar__surface {
   background: #fee2e2 !important;
   color: #991b1b !important;
@@ -566,6 +587,12 @@ body.dark-mode .payment-method-panel .mat-mdc-option.mdc-list-item--selected {
   background: #d1fae5 !important;
   color: #065f46 !important;
 }
+
+/* El boton de accion hereda el color del aviso coloreado */
+.snack-error .mat-mdc-snack-bar-action,
+.snack-error .mdc-snackbar__label { color: #991b1b !important; }
+.snack-success .mat-mdc-snack-bar-action,
+.snack-success .mdc-snackbar__label { color: #065f46 !important; }
 
 /* ── Radio buttons ── */
 .mat-mdc-radio-button .mdc-radio .mdc-radio__native-control:enabled:checked + .mdc-radio__background .mdc-radio__inner-circle {
