@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -19,7 +19,7 @@ const PHONE_PATTERN = /^\+?[0-9\s-]{10,18}$/;
 @Component({
   selector: 'app-org-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule,
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MatCardModule, MatFormFieldModule,
     MatInputModule, MatButtonModule, MatIconModule, MatSelectModule, MatSnackBarModule, MatProgressSpinnerModule],
   template: `
     <div style="max-width:600px;margin:0 auto">
@@ -87,59 +87,71 @@ const PHONE_PATTERN = /^\+?[0-9\s-]{10,18}$/;
                 <mat-error>La categoría es requerida</mat-error>
               }
             </mat-form-field>
-            <h4 style="margin:8px 0 0;color:var(--text-primary);display:flex;align-items:center;gap:6px">
-              <mat-icon>badge</mat-icon> Administrador de la organización
-            </h4>
-            <div style="display:flex;gap:12px;flex-wrap:wrap">
-              <mat-form-field appearance="outline" style="flex:1;min-width:200px">
-                <mat-label>Nombres *</mat-label>
-                <input matInput formControlName="adminFirstName" placeholder="Ej: María Fernanda">
-                @if (form.get('adminFirstName')?.hasError('required')) {
-                  <mat-error>Los nombres son requeridos</mat-error>
+            <!-- Datos de quien va a administrar la organización -->
+            <section style="border:1px solid var(--border-subtle,#e5e7eb);border-radius:12px;
+                            padding:20px 16px 8px;margin-top:8px;position:relative">
+              <h4 style="margin:0 0 16px;color:var(--text-primary);display:flex;align-items:center;
+                         gap:8px;font-size:.95rem;font-weight:600">
+                <mat-icon style="font-size:20px;width:20px;height:20px">badge</mat-icon>
+                Administrador de la organización
+              </h4>
+
+              <div style="display:flex;gap:16px;flex-wrap:wrap">
+                <mat-form-field appearance="outline" style="flex:1 1 220px">
+                  <mat-label>Nombres *</mat-label>
+                  <input matInput formControlName="adminFirstName" placeholder="Ej: María Fernanda">
+                  @if (form.get('adminFirstName')?.hasError('required')) {
+                    <mat-error>Los nombres son requeridos</mat-error>
+                  }
+                </mat-form-field>
+                <mat-form-field appearance="outline" style="flex:1 1 220px">
+                  <mat-label>Apellidos *</mat-label>
+                  <input matInput formControlName="adminLastName" placeholder="Ej: Gómez Restrepo">
+                  @if (form.get('adminLastName')?.hasError('required')) {
+                    <mat-error>Los apellidos son requeridos</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline" style="width:100%">
+                <mat-label>Email *</mat-label>
+                <input matInput formControlName="adminEmail" type="email" placeholder="admin@empresa.com">
+                <mat-icon matSuffix>email</mat-icon>
+                <mat-hint>A este correo le llega la invitación</mat-hint>
+                @if (form.get('adminEmail')?.hasError('required')) {
+                  <mat-error>El email es requerido</mat-error>
+                }
+                @if (form.get('adminEmail')?.hasError('email')) {
+                  <mat-error>Email inválido</mat-error>
                 }
               </mat-form-field>
-              <mat-form-field appearance="outline" style="flex:1;min-width:200px">
-                <mat-label>Apellidos *</mat-label>
-                <input matInput formControlName="adminLastName" placeholder="Ej: Gómez Restrepo">
-                @if (form.get('adminLastName')?.hasError('required')) {
-                  <mat-error>Los apellidos son requeridos</mat-error>
-                }
-              </mat-form-field>
-            </div>
-            <mat-form-field appearance="outline">
-              <mat-label>Email del administrador *</mat-label>
-              <input matInput formControlName="adminEmail" type="email" placeholder="admin@empresa.com">
-              <mat-icon matSuffix>email</mat-icon>
-              @if (form.get('adminEmail')?.hasError('required')) {
-                <mat-error>El email es requerido</mat-error>
-              }
-              @if (form.get('adminEmail')?.hasError('email')) {
-                <mat-error>Email inválido</mat-error>
-              }
-            </mat-form-field>
-            <div style="display:flex;gap:12px;flex-wrap:wrap">
-              <mat-form-field appearance="outline" style="flex:1;min-width:200px">
-                <mat-label>Celular personal del administrador *</mat-label>
-                <input matInput formControlName="adminPhone" type="tel" placeholder="300 123 4567">
-                <mat-icon matSuffix>smartphone</mat-icon>
-                @if (form.get('adminPhone')?.hasError('required')) {
-                  <mat-error>El celular personal es requerido</mat-error>
-                }
-                @if (form.get('adminPhone')?.hasError('pattern')) {
-                  <mat-error>Celular inválido</mat-error>
-                }
-              </mat-form-field>
-              <mat-form-field appearance="outline" style="flex:1;min-width:200px">
-                <mat-label>Celular de la organización (WhatsApp)</mat-label>
-                <input matInput formControlName="organizationPhone" type="tel" placeholder="300 765 4321">
-                <mat-icon matSuffix>chat</mat-icon>
-                <mat-hint>Número que se registrará en Meta para enviar las notificaciones</mat-hint>
-                @if (form.get('organizationPhone')?.hasError('pattern')) {
-                  <mat-error>Celular inválido</mat-error>
-                }
-              </mat-form-field>
-            </div>
-            <div style="display:flex;gap:12px;justify-content:flex-end">
+
+              <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px">
+                <mat-form-field appearance="outline" style="flex:1 1 220px">
+                  <mat-label>Celular personal *</mat-label>
+                  <input matInput formControlName="adminPhone" type="tel" placeholder="300 123 4567">
+                  <mat-icon matSuffix>smartphone</mat-icon>
+                  <mat-hint>Para contactar al administrador</mat-hint>
+                  @if (form.get('adminPhone')?.hasError('required')) {
+                    <mat-error>El celular personal es requerido</mat-error>
+                  }
+                  @if (form.get('adminPhone')?.hasError('pattern')) {
+                    <mat-error>Celular inválido</mat-error>
+                  }
+                </mat-form-field>
+                <mat-form-field appearance="outline" style="flex:1 1 220px">
+                  <mat-label>Celular del negocio</mat-label>
+                  <input matInput formControlName="organizationPhone" type="tel" placeholder="300 765 4321">
+                  <mat-icon matSuffix>chat</mat-icon>
+                  <mat-hint>El que se registra en Meta para WhatsApp</mat-hint>
+                  @if (form.get('organizationPhone')?.hasError('pattern')) {
+                    <mat-error>Celular inválido</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+            </section>
+
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
               <button mat-button type="button" routerLink="/organizations">Cancelar</button>
               <button mat-raised-button color="primary" type="submit"
                       [disabled]="form.invalid || loading() || uploadingLogo()">
