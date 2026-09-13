@@ -81,6 +81,7 @@ public class OrderAdapter implements OrderGateway {
                 .progressStatus(e.getProgressStatus()).paymentStatus(e.getPaymentStatus())
                 .paymentAmount(e.getPaymentAmount()).totalPrice(e.getTotalPrice())
                 .organizationId(e.getOrganizationId()).createdById(e.getCreatedById())
+                .notifyWhatsapp(e.isNotifyWhatsapp())
                 .createdAt(e.getCreatedAt()).updatedAt(e.getUpdatedAt())
                 .build();
     }
@@ -95,6 +96,7 @@ public class OrderAdapter implements OrderGateway {
                 .progressStatus(m.getProgressStatus()).paymentStatus(m.getPaymentStatus())
                 .paymentAmount(m.getPaymentAmount()).totalPrice(m.getTotalPrice())
                 .organizationId(m.getOrganizationId()).createdById(m.getCreatedById())
+                .notifyWhatsapp(m.getNotifyWhatsapp() == null || m.getNotifyWhatsapp())
                 .createdAt(m.getCreatedAt()).updatedAt(m.getUpdatedAt())
                 .build();
     }

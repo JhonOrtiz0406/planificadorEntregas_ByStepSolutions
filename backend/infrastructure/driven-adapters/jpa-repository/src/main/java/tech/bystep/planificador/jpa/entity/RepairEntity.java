@@ -75,6 +75,9 @@ public class RepairEntity {
     @Column(name = "created_by")
     private UUID createdById;
 
+    @Column(name = "notify_whatsapp", nullable = false)
+    private boolean notifyWhatsapp;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -20,6 +20,8 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Organization } from '../../../core/models/organization.model';
 import { User } from '../../../core/models/user.model';
 import { InactiveMemberDialogComponent } from './inactive-member-dialog.component';
+import { OrgContactCardComponent } from './org-contact-card.component';
+import { OrgWhatsAppCardComponent } from './org-whatsapp-card.component';
 
 // --- Confirm Org Action Dialog ---
 @Component({
@@ -101,7 +103,8 @@ export class DeleteOrgDialogComponent {
     CommonModule, ReactiveFormsModule, RouterLink,
     MatCardModule, MatButtonModule, MatIconModule,
     MatTableModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSnackBarModule,
-    MatProgressSpinnerModule, MatChipsModule, MatDividerModule, MatDialogModule
+    MatProgressSpinnerModule, MatChipsModule, MatDividerModule, MatDialogModule,
+    OrgContactCardComponent, OrgWhatsAppCardComponent
   ],
   templateUrl: './org-detail.component.html',
   styleUrl: './org-detail.component.css'

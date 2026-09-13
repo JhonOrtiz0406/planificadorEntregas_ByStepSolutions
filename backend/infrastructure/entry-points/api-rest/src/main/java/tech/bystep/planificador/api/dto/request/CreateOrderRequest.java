@@ -24,4 +24,6 @@ public class CreateOrderRequest {
     @Future
     private LocalDate deliveryDate;
     private BigDecimal totalPrice;
+    /** Checkbox "Notificar al cliente por WhatsApp". null = sí (al crear) / sin cambio (al editar). */
+    private Boolean notifyWhatsapp;
 }

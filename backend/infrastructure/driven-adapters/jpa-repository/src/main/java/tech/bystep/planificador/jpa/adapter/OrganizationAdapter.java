@@ -58,6 +58,8 @@ public class OrganizationAdapter implements OrganizationGateway {
                 .id(e.getId()).name(e.getName()).slug(e.getSlug())
                 .logoUrl(e.getLogoUrl()).iconName(e.getIconName()).adminEmail(e.getAdminEmail())
                 .category(e.getCategory()).active(e.isActive())
+                .adminFirstName(e.getAdminFirstName()).adminLastName(e.getAdminLastName())
+                .adminPhone(e.getAdminPhone()).organizationPhone(e.getOrganizationPhone())
                 .createdAt(e.getCreatedAt()).updatedAt(e.getUpdatedAt())
                 .build();
     }
@@ -67,6 +69,8 @@ public class OrganizationAdapter implements OrganizationGateway {
                 .id(m.getId()).name(m.getName()).slug(m.getSlug())
                 .logoUrl(m.getLogoUrl()).iconName(m.getIconName()).adminEmail(m.getAdminEmail())
                 .category(m.getCategory() != null ? m.getCategory() : "GENERAL")
+                .adminFirstName(m.getAdminFirstName()).adminLastName(m.getAdminLastName())
+                .adminPhone(m.getAdminPhone()).organizationPhone(m.getOrganizationPhone())
                 .active(m.isActive()).createdAt(m.getCreatedAt()).updatedAt(m.getUpdatedAt())
                 .build();
     }

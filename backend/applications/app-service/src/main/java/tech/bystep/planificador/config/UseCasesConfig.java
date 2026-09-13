@@ -10,12 +10,12 @@ public class UseCasesConfig {
 
     @Bean
     public OrderUseCase orderUseCase(OrderGateway orderGateway, ReminderGateway reminderGateway,
-                                     tech.bystep.planificador.model.gateways.WhatsAppGateway whatsAppGateway,
+                                     ClientNotificationUseCase clientNotificationUseCase,
                                      NotificationGateway notificationGateway,
                                      tech.bystep.planificador.model.gateways.UserGateway userGateway,
                                      tech.bystep.planificador.model.gateways.PaymentRecordGateway paymentRecordGateway,
                                      tech.bystep.planificador.model.gateways.StorageGateway storageGateway) {
-        return new OrderUseCase(orderGateway, reminderGateway, whatsAppGateway, notificationGateway,
+        return new OrderUseCase(orderGateway, reminderGateway, clientNotificationUseCase, notificationGateway,
                 userGateway, paymentRecordGateway, storageGateway);
     }
 
@@ -54,7 +54,40 @@ public class UseCasesConfig {
     public RepairUseCase repairUseCase(RepairGateway repairGateway,
                                        tech.bystep.planificador.model.gateways.RepairPaymentGateway repairPaymentGateway,
                                        OrganizationGateway organizationGateway,
-                                       tech.bystep.planificador.model.gateways.StorageGateway storageGateway) {
-        return new RepairUseCase(repairGateway, repairPaymentGateway, organizationGateway, storageGateway);
+                                       tech.bystep.planificador.model.gateways.StorageGateway storageGateway,
+                                       ClientNotificationUseCase clientNotificationUseCase) {
+        return new RepairUseCase(repairGateway, repairPaymentGateway, organizationGateway, storageGateway,
+                clientNotificationUseCase);
+    }
+
+    // ── WhatsApp por organización ───────────────────────────────────────────
+
+    @Bean
+    public ClientNotificationUseCase clientNotificationUseCase(OrganizationGateway organizationGateway,
+                                                               WhatsAppConfigGateway whatsAppConfigGateway,
+                                                               WhatsAppTemplateGateway whatsAppTemplateGateway,
+                                                               NotificationSettingsGateway notificationSettingsGateway,
+                                                               WhatsAppMessageGateway whatsAppMessageGateway,
+                                                               WhatsAppDispatchTrigger whatsAppDispatchTrigger) {
+        return new ClientNotificationUseCase(organizationGateway, whatsAppConfigGateway, whatsAppTemplateGateway,
+                notificationSettingsGateway, whatsAppMessageGateway, whatsAppDispatchTrigger);
+    }
+
+    @Bean
+    public WhatsAppDispatchUseCase whatsAppDispatchUseCase(WhatsAppMessageGateway whatsAppMessageGateway,
+                                                           WhatsAppConfigGateway whatsAppConfigGateway,
+                                                           WhatsAppCloudGateway whatsAppCloudGateway) {
+        return new WhatsAppDispatchUseCase(whatsAppMessageGateway, whatsAppConfigGateway, whatsAppCloudGateway);
+    }
+
+    @Bean
+    public WhatsAppAdminUseCase whatsAppAdminUseCase(OrganizationGateway organizationGateway,
+                                                     WhatsAppConfigGateway whatsAppConfigGateway,
+                                                     WhatsAppTemplateGateway whatsAppTemplateGateway,
+                                                     NotificationSettingsGateway notificationSettingsGateway,
+                                                     WhatsAppMessageGateway whatsAppMessageGateway,
+                                                     WhatsAppCloudGateway whatsAppCloudGateway) {
+        return new WhatsAppAdminUseCase(organizationGateway, whatsAppConfigGateway, whatsAppTemplateGateway,
+                notificationSettingsGateway, whatsAppMessageGateway, whatsAppCloudGateway);
     }
 }

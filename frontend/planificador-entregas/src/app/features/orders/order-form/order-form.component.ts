@@ -11,6 +11,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { OrderService } from '../../../core/services/order.service';
 import { compressImage } from '../../../core/utils/image-compression.util';
 import { formatMoneyInput } from '../../../core/utils/money-input.util';
@@ -21,7 +22,7 @@ import { formatMoneyInput } from '../../../core/utils/money-input.util';
   imports: [
     CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule,
     MatInputModule, MatButtonModule, MatIconModule, MatDatepickerModule,
-    MatNativeDateModule, MatProgressSpinnerModule, MatSnackBarModule
+    MatNativeDateModule, MatProgressSpinnerModule, MatSnackBarModule, MatCheckboxModule
   ],
   templateUrl: './order-form.component.html',
   styleUrl: './order-form.component.css'
@@ -61,6 +62,7 @@ export class OrderFormComponent implements OnInit {
       description: [''],
       deliveryDate: [null, Validators.required],
       totalPriceDisplay: [''],
+      notifyWhatsapp: [true],
     });
   }
 
@@ -90,7 +92,8 @@ export class OrderFormComponent implements OnInit {
           clientAddress: order.clientAddress,
           description: order.description,
           deliveryDate: new Date(order.deliveryDate + 'T00:00:00'),
-          totalPriceDisplay: priceDisplay
+          totalPriceDisplay: priceDisplay,
+          notifyWhatsapp: order.notifyWhatsapp !== false
         });
         const photos = order.photoUrls?.length ? order.photoUrls
           : order.photoUrl ? [order.photoUrl] : [];

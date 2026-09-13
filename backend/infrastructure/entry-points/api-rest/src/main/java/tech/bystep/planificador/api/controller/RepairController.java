@@ -70,6 +70,7 @@ public class RepairController {
                 .photoUrls(request.getPhotoUrls() != null ? request.getPhotoUrls() : new java.util.ArrayList<>())
                 .organizationId(orgId)
                 .createdById(userId)
+                .notifyWhatsapp(request.getNotifyWhatsapp())
                 .build();
         Repair created = repairUseCase.create(repair);
         return ResponseEntity.status(201).body(ApiResponse.ok("Arreglo creado", toResponse(created)));
@@ -92,6 +93,7 @@ public class RepairController {
                 .entryDate(request.getEntryDate())
                 .deliveryDate(request.getDeliveryDate())
                 .photoUrls(request.getPhotoUrls())
+                .notifyWhatsapp(request.getNotifyWhatsapp())
                 .build();
         Repair updated = repairUseCase.update(id, orgId, updates);
         return ResponseEntity.ok(ApiResponse.ok("Arreglo actualizado", toResponse(updated)));
@@ -184,6 +186,7 @@ public class RepairController {
                 .repairStatus(repair.getRepairStatus()).paymentStatus(repair.getPaymentStatus())
                 .totalPrice(repair.getTotalPrice()).paymentAmount(repair.getPaymentAmount())
                 .balanceDue(balance).organizationId(repair.getOrganizationId())
+                .notifyWhatsapp(repair.getNotifyWhatsapp())
                 .createdAt(repair.getCreatedAt()).updatedAt(repair.getUpdatedAt())
                 .build();
     }

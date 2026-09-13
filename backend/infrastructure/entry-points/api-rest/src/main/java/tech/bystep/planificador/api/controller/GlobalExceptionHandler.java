@@ -58,6 +58,13 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }
 
+    @ExceptionHandler(tech.bystep.planificador.model.whatsapp.WhatsAppApiException.class)
+    public ResponseEntity<ControlledErrorResponse> handleWhatsAppApi(
+            tech.bystep.planificador.model.whatsapp.WhatsAppApiException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(buildError("Error de Meta (WhatsApp)",
+                HttpStatus.BAD_GATEWAY.value(), "[" + ex.getCode() + "] " + ex.getMessage()));
+    }
+
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ControlledErrorResponse> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(buildError("Archivo demasiado grande",

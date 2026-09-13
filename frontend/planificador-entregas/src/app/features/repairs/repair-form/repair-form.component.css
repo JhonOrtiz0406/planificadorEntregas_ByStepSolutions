@@ -210,3 +210,9 @@ mat-card-title mat-icon {
   .photo-actions { flex-direction: column; }
   .upload-btn { width: 100%; justify-content: center; }
 }
+
+.notify-whatsapp {
+  display: block;
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+}

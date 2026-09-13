@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import tech.bystep.planificador.api.dto.response.ApiResponse;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import tech.bystep.planificador.model.gateways.StorageGateway;
+import tech.bystep.planificador.security.UserPrincipal;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -30,11 +32,14 @@ public class FileController {
     private static final Set<String> IMAGE_EXTENSIONS = Set.of(
             "jpg", "jpeg", "png", "gif", "webp", "heic", "heif", "bmp");
 
+    private static final Set<String> ALLOWED_FOLDERS = Set.of("orders", "repairs", "arreglos");
+
     @PostMapping("/upload")
     @PreAuthorize("hasAnyRole('ORG_ADMIN','ORG_EMPLOYEE')")
     public ResponseEntity<ApiResponse<Map<String, String>>> uploadFile(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "folder", defaultValue = "orders") String folder) throws IOException {
+            @RequestParam(value = "folder", defaultValue = "orders") String folder,
+            @AuthenticationPrincipal UserPrincipal principal) throws IOException {
         String contentType = file.getContentType();
         String ext = "";
         String original = file.getOriginalFilename();
@@ -52,7 +57,10 @@ public class FileController {
             contentType = guessContentTypeFromExtension(extNoDot);
         }
 
-        String fileName = folder + "/" + UUID.randomUUID() + ext;
+        // Cada organización guarda sus archivos en su propia carpeta: orgs/{orgId}/{orders|repairs}/...
+        String safeFolder = ALLOWED_FOLDERS.contains(folder) ? folder : "orders";
+        String safeExt = IMAGE_EXTENSIONS.contains(extNoDot) ? "." + extNoDot : "";
+        String fileName = "orgs/" + principal.getOrganizationId() + "/" + safeFolder + "/" + UUID.randomUUID() + safeExt;
         String url = storageGateway.uploadFile(fileName, contentType, file.getBytes());
         return ResponseEntity.ok(ApiResponse.ok(Map.of("url", url)));
     }

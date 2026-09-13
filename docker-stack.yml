@@ -25,11 +25,12 @@ services:
       # Trazabilidad: qué versión está corriendo (se ve en /actuator/info)
       APP_VERSION: ${APP_VERSION:-dev}
       DEPLOYED_AT: ${DEPLOYED_AT:-}
-      WHATSAPP_ACCESS_TOKEN: ${WHATSAPP_ACCESS_TOKEN:-}
-      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
-      WHATSAPP_WEBHOOK_VERIFY_TOKEN: ${WHATSAPP_WEBHOOK_VERIFY_TOKEN:-}
-      WHATSAPP_TEST_MODE: ${WHATSAPP_TEST_MODE:-false}
-      WHATSAPP_LANGUAGE: ${WHATSAPP_LANGUAGE:-es}
+      # WhatsApp: la configuración de cada organización vive en base de datos.
+      # Aquí solo quedan los interruptores globales del módulo.
+      WHATSAPP_ENABLED: ${WHATSAPP_ENABLED:-true}
+      WHATSAPP_DRY_RUN: ${WHATSAPP_DRY_RUN:-false}
+      WHATSAPP_GRAPH_VERSION: ${WHATSAPP_GRAPH_VERSION:-v23.0}
+      WHATSAPP_CREDENTIALS_KEY: ${WHATSAPP_CREDENTIALS_KEY:-}
     networks:
       - dokploy-network
     deploy:

@@ -54,6 +54,7 @@ public class RepairAdapter implements RepairGateway {
                 .repairStatus(e.getRepairStatus()).paymentStatus(e.getPaymentStatus())
                 .totalPrice(e.getTotalPrice()).paymentAmount(e.getPaymentAmount())
                 .organizationId(e.getOrganizationId()).createdById(e.getCreatedById())
+                .notifyWhatsapp(e.isNotifyWhatsapp())
                 .createdAt(e.getCreatedAt()).updatedAt(e.getUpdatedAt())
                 .build();
     }
@@ -68,6 +69,7 @@ public class RepairAdapter implements RepairGateway {
                 .repairStatus(m.getRepairStatus()).paymentStatus(m.getPaymentStatus())
                 .totalPrice(m.getTotalPrice()).paymentAmount(m.getPaymentAmount())
                 .organizationId(m.getOrganizationId()).createdById(m.getCreatedById())
+                .notifyWhatsapp(m.getNotifyWhatsapp() == null || m.getNotifyWhatsapp())
                 .createdAt(m.getCreatedAt()).updatedAt(m.getUpdatedAt())
                 .build();
     }

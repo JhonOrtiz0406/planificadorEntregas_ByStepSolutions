@@ -17,6 +17,7 @@ export interface Repair {
   paymentAmount?: number;
   balanceDue?: number;
   organizationId: string;
+  notifyWhatsapp?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -31,6 +32,7 @@ export interface CreateRepairRequest {
   entryDate?: string;
   deliveryDate?: string;
   photoUrls?: string[];
+  notifyWhatsapp?: boolean;
 }
 
 export interface RepairPayment {

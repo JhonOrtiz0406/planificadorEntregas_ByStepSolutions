@@ -18,6 +18,7 @@ export interface Order {
   totalPrice?: number;
   balanceDue?: number;
   organizationId: string;
+  notifyWhatsapp?: boolean;
   daysUntilDelivery: number;
   overdue: boolean;
   createdAt: string;
@@ -34,6 +35,7 @@ export interface CreateOrderRequest {
   photoUrls?: string[];
   deliveryDate: string;
   totalPrice?: number;
+  notifyWhatsapp?: boolean;
 }
 
 export interface PaymentRecord {

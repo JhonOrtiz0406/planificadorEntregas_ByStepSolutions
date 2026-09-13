@@ -63,12 +63,112 @@ public class UserUseCase {
         return userOrgGateway.findByUserId(userId);
     }
 
+    /** Membresías habilitadas: son las únicas organizaciones a las que el usuario puede entrar. */
+    public List<UserOrganization> findActiveUserOrganizations(UUID userId) {
+        return userOrgGateway.findByUserId(userId).stream().filter(UserOrganization::isActive).toList();
+    }
+
+    public Optional<UserOrganization> findMembership(UUID userId, UUID organizationId) {
+        if (userId == null || organizationId == null) return Optional.empty();
+        return userOrgGateway.find(userId, organizationId);
+    }
+
+    /** true si el usuario pertenece (habilitado o no) a la organización. */
+    public boolean isMemberOf(UUID userId, UUID organizationId) {
+        if (findMembership(userId, organizationId).isPresent()) return true;
+        // Compatibilidad con usuarios antiguos sin fila en user_organizations.
+        return userGateway.findById(userId)
+                .map(u -> organizationId.equals(u.getOrganizationId()))
+                .orElse(false);
+    }
+
+    /**
+     * Miembros de UNA organización, con el rol y estado que tienen EN ESA organización.
+     * Incluye usuarios cuya organización actual es otra pero que también pertenecen a esta.
+     */
+    public List<User> findMembers(UUID organizationId) {
+        java.util.Map<UUID, User> result = new java.util.LinkedHashMap<>();
+        for (UserOrganization membership : userOrgGateway.findByOrganizationId(organizationId)) {
+            userGateway.findById(membership.getUserId()).ifPresent(u -> {
+                u.setRole(UserRole.valueOf(membership.getRole()));
+                u.setActive(u.isActive() && membership.isActive());
+                u.setOrganizationId(organizationId);
+                result.put(u.getId(), u);
+            });
+        }
+        // Compatibilidad: usuarios con organization_id = esta org pero sin fila de membresía.
+        for (User u : userGateway.findByOrganizationId(organizationId)) {
+            result.putIfAbsent(u.getId(), u);
+        }
+        return new java.util.ArrayList<>(result.values());
+    }
+
+    /**
+     * Inhabilita al usuario SOLO en esta organización. Si ya no le queda ninguna
+     * organización habilitada, se inhabilita la cuenta (comportamiento de siempre
+     * para usuarios de una sola organización).
+     */
+    public void deactivateMembership(UUID userId, UUID organizationId) {
+        User user = userGateway.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        userOrgGateway.setActive(userId, organizationId, false);
+        List<UserOrganization> stillActive = findActiveUserOrganizations(userId);
+        if (stillActive.isEmpty()) {
+            user.setActive(false);
+        } else if (organizationId.equals(user.getOrganizationId())) {
+            UserOrganization next = stillActive.get(0);
+            user.setOrganizationId(next.getOrganizationId());
+            user.setRole(UserRole.valueOf(next.getRole()));
+        }
+        user.setUpdatedAt(LocalDateTime.now());
+        userGateway.save(user);
+    }
+
+    /** Vuelve a habilitar al usuario en esta organización. */
+    public void activateMembership(UUID userId, UUID organizationId) {
+        User user = userGateway.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        userOrgGateway.setActive(userId, organizationId, true);
+        user.setActive(true);
+        if (user.getOrganizationId() == null) {
+            user.setOrganizationId(organizationId);
+            userOrgGateway.find(userId, organizationId)
+                    .ifPresent(m -> user.setRole(UserRole.valueOf(m.getRole())));
+        }
+        user.setUpdatedAt(LocalDateTime.now());
+        userGateway.save(user);
+    }
+
+    /**
+     * Saca al usuario de esta organización. Si no pertenece a ninguna otra, se elimina
+     * la cuenta (comportamiento de siempre); si pertenece a otras, se conserva para ellas.
+     */
+    public void removeFromOrganization(UUID userId, UUID organizationId) {
+        User user = userGateway.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        userOrgGateway.deleteByUserIdAndOrganizationId(userId, organizationId);
+        List<UserOrganization> remaining = userOrgGateway.findByUserId(userId);
+        if (remaining.isEmpty()) {
+            userGateway.deleteById(userId);
+            return;
+        }
+        if (organizationId.equals(user.getOrganizationId())) {
+            UserOrganization next = remaining.stream().filter(UserOrganization::isActive).findFirst()
+                    .orElse(remaining.get(0));
+            user.setOrganizationId(next.getOrganizationId());
+            user.setRole(UserRole.valueOf(next.getRole()));
+            user.setUpdatedAt(LocalDateTime.now());
+            userGateway.save(user);
+        }
+    }
+
     public User switchOrganization(UUID userId, UUID organizationId) {
         User user = userGateway.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
         List<UserOrganization> orgs = userOrgGateway.findByUserId(userId);
         UserOrganization target = orgs.stream()
                 .filter(o -> o.getOrganizationId().equals(organizationId))
+                .filter(UserOrganization::isActive)
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("User does not belong to organization: " + organizationId));
         user.setOrganizationId(organizationId);

@@ -11,6 +11,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { RepairService } from '../../../core/services/repair.service';
 import { compressImage } from '../../../core/utils/image-compression.util';
 import { formatMoneyInput } from '../../../core/utils/money-input.util';
@@ -21,7 +22,7 @@ import { formatMoneyInput } from '../../../core/utils/money-input.util';
   imports: [
     CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule,
     MatInputModule, MatButtonModule, MatIconModule, MatDatepickerModule,
-    MatNativeDateModule, MatProgressSpinnerModule, MatSnackBarModule
+    MatNativeDateModule, MatProgressSpinnerModule, MatSnackBarModule, MatCheckboxModule
   ],
   templateUrl: './repair-form.component.html',
   styleUrl: './repair-form.component.css'
@@ -61,6 +62,7 @@ export class RepairFormComponent implements OnInit {
       entryDate: [this.today, Validators.required],
       deliveryDate: [null],
       totalPriceDisplay: ['', Validators.required],
+      notifyWhatsapp: [true],
     });
   }
 
@@ -91,7 +93,8 @@ export class RepairFormComponent implements OnInit {
           repairDescription: repair.repairDescription,
           entryDate: new Date(repair.entryDate + 'T00:00:00'),
           deliveryDate: repair.deliveryDate ? new Date(repair.deliveryDate + 'T00:00:00') : null,
-          totalPriceDisplay: priceDisplay
+          totalPriceDisplay: priceDisplay,
+          notifyWhatsapp: repair.notifyWhatsapp !== false
         });
         this.photoUrls.set(repair.photoUrls ?? []);
         this.loading.set(false);
@@ -167,7 +170,8 @@ export class RepairFormComponent implements OnInit {
       entryDate: toDateStr(value.entryDate) ?? undefined,
       deliveryDate: toDateStr(value.deliveryDate) ?? undefined,
       totalPrice: this.parsePriceValue() ?? undefined,
-      photoUrls: this.photoUrls()
+      photoUrls: this.photoUrls(),
+      notifyWhatsapp: value.notifyWhatsapp !== false
     };
 
     const operation = this.editMode()

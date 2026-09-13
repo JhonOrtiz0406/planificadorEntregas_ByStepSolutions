@@ -21,6 +21,11 @@ public class Organization {
     private String iconName;
     private String adminEmail;
     private String category;
+    private String adminFirstName;
+    private String adminLastName;
+    private String adminPhone;
+    /** Número principal de la organización; es el que se registra en Meta (WhatsApp). */
+    private String organizationPhone;
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

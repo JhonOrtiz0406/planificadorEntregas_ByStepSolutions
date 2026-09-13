@@ -92,6 +92,7 @@ public class OrderController {
                 .photoUrls(request.getPhotoUrls() != null ? request.getPhotoUrls() : new java.util.ArrayList<>())
                 .deliveryDate(request.getDeliveryDate())
                 .totalPrice(request.getTotalPrice())
+                .notifyWhatsapp(request.getNotifyWhatsapp())
                 .organizationId(orgId)
                 .createdById(userId)
                 .build();
@@ -116,6 +117,7 @@ public class OrderController {
                 .photoUrls(request.getPhotoUrls())
                 .deliveryDate(request.getDeliveryDate())
                 .totalPrice(request.getTotalPrice())
+                .notifyWhatsapp(request.getNotifyWhatsapp())
                 .build();
         Order updated = orderUseCase.update(id, orgId, updates);
         return ResponseEntity.ok(ApiResponse.ok("Order updated", toResponse(updated)));
@@ -216,6 +218,7 @@ public class OrderController {
                 .progressStatus(order.getProgressStatus()).paymentStatus(order.getPaymentStatus())
                 .paymentAmount(order.getPaymentAmount()).totalPrice(order.getTotalPrice())
                 .balanceDue(balance).organizationId(order.getOrganizationId())
+                .notifyWhatsapp(order.getNotifyWhatsapp())
                 .daysUntilDelivery(order.daysUntilDelivery()).overdue(order.isOverdue())
                 .createdAt(order.getCreatedAt()).updatedAt(order.getUpdatedAt())
                 .build();

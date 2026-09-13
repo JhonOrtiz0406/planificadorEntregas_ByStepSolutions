@@ -34,6 +34,7 @@ public class RepairResponse {
     private BigDecimal paymentAmount;
     private BigDecimal balanceDue;
     private UUID organizationId;
+    private Boolean notifyWhatsapp;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

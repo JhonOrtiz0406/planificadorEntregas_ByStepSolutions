@@ -88,7 +88,8 @@ public class AuthController {
             userUseCase.updateFcmToken(user.getId(), request.getFcmToken());
         }
 
-        List<UserOrganization> userOrgs = userUseCase.findUserOrganizations(user.getId());
+        // Solo organizaciones donde la membresía está habilitada.
+        List<UserOrganization> userOrgs = userUseCase.findActiveUserOrganizations(user.getId());
         if (userOrgs.size() > 1) {
             List<OrgChoiceDto> choices = userOrgs.stream().map(uo -> {
                 var org = organizationUseCase.findById(uo.getOrganizationId()).orElse(null);

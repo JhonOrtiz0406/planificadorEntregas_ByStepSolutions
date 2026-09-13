@@ -33,6 +33,10 @@ public class UserOrgEntity {
     @Column(name = "joined_at")
     private OffsetDateTime joinedAt;
 
+    @Builder.Default
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
