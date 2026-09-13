@@ -16,7 +16,7 @@
           <h3 class="section-title"><mat-icon>inventory_2</mat-icon> Información del Producto</h3>
 
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Nombre del producto *</mat-label>
+            <mat-label>Nombre del producto</mat-label>
             <input matInput formControlName="productName" placeholder="Ej: Anillo de oro con diamante">
             <mat-icon matSuffix>diamond</mat-icon>
             @if (form.get('productName')?.hasError('required')) {
@@ -88,7 +88,7 @@
 
           <div class="two-cols">
             <mat-form-field appearance="outline">
-              <mat-label>Nombre del cliente *</mat-label>
+              <mat-label>Nombre del cliente</mat-label>
               <input matInput formControlName="clientName" placeholder="Nombre completo">
               <mat-icon matSuffix>person</mat-icon>
               @if (form.get('clientName')?.hasError('required')) {
@@ -120,7 +120,7 @@
 
           <div class="two-cols">
             <mat-form-field appearance="outline">
-              <mat-label>Fecha de entrega *</mat-label>
+              <mat-label>Fecha de entrega</mat-label>
               <input matInput [matDatepicker]="picker" formControlName="deliveryDate"
                      [min]="editMode() ? null : minDate"
                      placeholder="DD/MM/AAAA">

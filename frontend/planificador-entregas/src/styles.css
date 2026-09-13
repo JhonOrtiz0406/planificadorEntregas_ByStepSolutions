@@ -62,6 +62,25 @@ body.dark-mode .snack-error .mdc-snackbar__surface { background: #7f1d1d !import
 body.dark-mode .snack-success .mdc-snackbar__label, body.dark-mode .snack-success .mat-mdc-snack-bar-action { color: #6ee7b7 !important; }
 body.dark-mode .snack-error .mdc-snackbar__label, body.dark-mode .snack-error .mat-mdc-snack-bar-action { color: #fca5a5 !important; }
 
+/* Modo oscuro: los recuadros de los campos heredaban el fondo claro de
+   Material y aparecian blancos sobre las tarjetas oscuras (se veia sobre
+   todo en la fila de registrar abono). */
+body.dark-mode .mat-mdc-text-field-wrapper,
+body.dark-mode .mdc-text-field--outlined,
+body.dark-mode .mat-mdc-form-field-focus-overlay {
+  background-color: transparent !important;
+}
+body.dark-mode .mat-mdc-input-element,
+body.dark-mode .mat-mdc-select-value-text,
+body.dark-mode .mat-mdc-form-field input::placeholder {
+  color: var(--text-primary) !important;
+}
+body.dark-mode .mat-mdc-form-field-hint,
+body.dark-mode .mat-mdc-form-field-icon-suffix,
+body.dark-mode .mat-mdc-form-field-icon-prefix {
+  color: var(--text-secondary) !important;
+}
+
 /* ── Material form fields ── */
 body.dark-mode .mat-mdc-form-field-appearance-outline .mdc-notched-outline__leading,
 body.dark-mode .mat-mdc-form-field-appearance-outline .mdc-notched-outline__notch,

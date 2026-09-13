@@ -68,7 +68,7 @@ const PHONE_PATTERN = /^\+?[0-9\s-]{10,18}$/;
             </div>
 
             <mat-form-field appearance="outline">
-              <mat-label>Nombre de la organización *</mat-label>
+              <mat-label>Nombre de la organización</mat-label>
               <input matInput formControlName="name" placeholder="Ej: Joyería El Diamante">
               <mat-icon matSuffix>business</mat-icon>
               @if (form.get('name')?.hasError('required')) {
@@ -76,7 +76,7 @@ const PHONE_PATTERN = /^\+?[0-9\s-]{10,18}$/;
               }
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>Categoría *</mat-label>
+              <mat-label>Categoría</mat-label>
               <mat-select formControlName="category">
                 @for (cat of categoryEntries(); track cat.key) {
                   <mat-option [value]="cat.key">{{ cat.label }}</mat-option>
@@ -98,14 +98,14 @@ const PHONE_PATTERN = /^\+?[0-9\s-]{10,18}$/;
 
               <div style="display:flex;gap:16px;flex-wrap:wrap">
                 <mat-form-field appearance="outline" style="flex:1 1 220px">
-                  <mat-label>Nombres *</mat-label>
+                  <mat-label>Nombres</mat-label>
                   <input matInput formControlName="adminFirstName" placeholder="Ej: María Fernanda">
                   @if (form.get('adminFirstName')?.hasError('required')) {
                     <mat-error>Los nombres son requeridos</mat-error>
                   }
                 </mat-form-field>
                 <mat-form-field appearance="outline" style="flex:1 1 220px">
-                  <mat-label>Apellidos *</mat-label>
+                  <mat-label>Apellidos</mat-label>
                   <input matInput formControlName="adminLastName" placeholder="Ej: Gómez Restrepo">
                   @if (form.get('adminLastName')?.hasError('required')) {
                     <mat-error>Los apellidos son requeridos</mat-error>
@@ -114,7 +114,7 @@ const PHONE_PATTERN = /^\+?[0-9\s-]{10,18}$/;
               </div>
 
               <mat-form-field appearance="outline" style="width:100%">
-                <mat-label>Email *</mat-label>
+                <mat-label>Email</mat-label>
                 <input matInput formControlName="adminEmail" type="email" placeholder="admin@empresa.com">
                 <mat-icon matSuffix>email</mat-icon>
                 <mat-hint>A este correo le llega la invitación</mat-hint>
@@ -128,7 +128,7 @@ const PHONE_PATTERN = /^\+?[0-9\s-]{10,18}$/;
 
               <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px">
                 <mat-form-field appearance="outline" style="flex:1 1 220px">
-                  <mat-label>Celular personal *</mat-label>
+                  <mat-label>Celular personal</mat-label>
                   <input matInput formControlName="adminPhone" type="tel" placeholder="300 123 4567">
                   <mat-icon matSuffix>smartphone</mat-icon>
                   <mat-hint>Para contactar al administrador</mat-hint>

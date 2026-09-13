@@ -64,11 +64,11 @@ import {
             <h4 class="section">Credenciales de Meta</h4>
             <form [formGroup]="credForm" (ngSubmit)="saveCredentials()" class="cred-form">
               <mat-form-field appearance="outline">
-                <mat-label>WABA ID *</mat-label>
+                <mat-label>WABA ID</mat-label>
                 <input matInput formControlName="wabaId" autocomplete="off">
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Phone Number ID *</mat-label>
+                <mat-label>Phone Number ID</mat-label>
                 <input matInput formControlName="phoneNumberId" autocomplete="off">
               </mat-form-field>
               <mat-form-field appearance="outline" class="wide">

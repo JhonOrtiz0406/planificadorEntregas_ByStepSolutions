@@ -524,7 +524,11 @@ body.dark-mode .empty-payment { color: #b0aed4 !important; }
 body.dark-mode .empty-payment p { color: #cfcdec !important; }
 body.dark-mode .payment-form-row {
   background: rgba(129,140,248,0.1) !important;
+  background-image: none !important;
   border-color: rgba(129,140,248,0.22) !important;
+}
+body.dark-mode .payment-form-row .mat-mdc-text-field-wrapper {
+  background-color: transparent !important;
 }
 body.dark-mode .highlight-pulse {
   animation: paymentPulseDark 2.4s ease;

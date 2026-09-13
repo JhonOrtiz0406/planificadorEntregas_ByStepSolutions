@@ -44,17 +44,17 @@ const PHONE_PATTERN = /^\+?[0-9\s-]{10,18}$/;
           <form [formGroup]="form" (ngSubmit)="save()" style="display:flex;flex-direction:column;gap:4px;margin-top:8px">
             <div class="row">
               <mat-form-field appearance="outline">
-                <mat-label>Nombres *</mat-label>
+                <mat-label>Nombres</mat-label>
                 <input matInput formControlName="adminFirstName">
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Apellidos *</mat-label>
+                <mat-label>Apellidos</mat-label>
                 <input matInput formControlName="adminLastName">
               </mat-form-field>
             </div>
             <div class="row">
               <mat-form-field appearance="outline">
-                <mat-label>Celular personal *</mat-label>
+                <mat-label>Celular personal</mat-label>
                 <input matInput formControlName="adminPhone" type="tel" placeholder="300 123 4567">
                 @if (form.get('adminPhone')?.hasError('pattern')) { <mat-error>Celular inválido</mat-error> }
               </mat-form-field>
