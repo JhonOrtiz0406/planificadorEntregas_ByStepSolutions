@@ -17,7 +17,7 @@
 
           <div class="two-cols">
             <mat-form-field appearance="outline">
-              <mat-label>Nombres *</mat-label>
+              <mat-label>Nombres</mat-label>
               <input matInput formControlName="clientFirstName" placeholder="Nombres del cliente">
               <mat-icon matSuffix>person</mat-icon>
               @if (form.get('clientFirstName')?.hasError('required')) {
@@ -26,7 +26,7 @@
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>Apellidos *</mat-label>
+              <mat-label>Apellidos</mat-label>
               <input matInput formControlName="clientLastName" placeholder="Apellidos del cliente">
               <mat-icon matSuffix>person</mat-icon>
               @if (form.get('clientLastName')?.hasError('required')) {
@@ -36,7 +36,7 @@
           </div>
 
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Celular *</mat-label>
+            <mat-label>Celular</mat-label>
             <input matInput formControlName="clientPhone" type="tel" placeholder="+57 300 000 0000">
             <mat-icon matSuffix>phone</mat-icon>
             @if (form.get('clientPhone')?.hasError('required')) {
@@ -54,7 +54,7 @@
           <h3 class="section-title"><mat-icon>build</mat-icon> Información del Arreglo</h3>
 
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Artículo *</mat-label>
+            <mat-label>Artículo</mat-label>
             <input matInput formControlName="itemDescription" placeholder="Ej: Anillo de oro con piedra suelta">
             <mat-icon matSuffix>diamond</mat-icon>
             @if (form.get('itemDescription')?.hasError('required')) {
@@ -63,7 +63,7 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Descripción del arreglo *</mat-label>
+            <mat-label>Descripción del arreglo</mat-label>
             <textarea matInput formControlName="repairDescription" rows="3"
                       placeholder="Detalle del trabajo a realizar..."></textarea>
             <mat-icon matSuffix>notes</mat-icon>
@@ -74,7 +74,7 @@
 
           <div class="two-cols">
             <mat-form-field appearance="outline">
-              <mat-label>Fecha de ingreso *</mat-label>
+              <mat-label>Fecha de ingreso</mat-label>
               <input matInput [matDatepicker]="entryPicker" formControlName="entryDate" placeholder="DD/MM/AAAA">
               <mat-datepicker-toggle matIconSuffix [for]="entryPicker"></mat-datepicker-toggle>
               <mat-datepicker #entryPicker></mat-datepicker>
@@ -93,7 +93,7 @@
           </div>
 
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Valor total *</mat-label>
+            <mat-label>Valor total</mat-label>
             <span matPrefix style="color:#6b7280;padding-right:4px">$&nbsp;</span>
             <input matInput type="text" inputmode="numeric"
                    formControlName="totalPriceDisplay"
